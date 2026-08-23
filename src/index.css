@@ -1,0 +1,128 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ... */
+@font-face {
+  font-family: 'Nasalization';
+  src: url('./assets/fonts/NASALIZA.TTF') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Orbitron';
+  src: url('./assets/fonts/Orbitron.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+}
+
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.87);
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  --background: #11161a;
+  --foreground: #F1F5F9;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+  --primary: 222.2 47.4% 11.2%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 210 40% 96.1%;
+  --secondary-foreground: 222.2 47.4% 11.2%;
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --accent: 210 40% 96.1%;
+  --accent-foreground: 222.2 47.4% 11.2%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 222.2 84% 4.9%;
+  --radius: 0.5rem;
+}
+
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@keyframes niyaaz-logo-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.94);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.niyaaz-logo-animation {
+  animation: niyaaz-logo-enter 700ms ease-out both;
+  transform-origin: center;
+}
+
+@keyframes niyaaz-page-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.niyaaz-page-enter {
+  animation: niyaaz-page-enter 500ms ease-out both;
+}
+
+.niyaaz-section-enter {
+  animation: niyaaz-page-enter 600ms ease-out 120ms both;
+}
+
+.niyaaz-section-enter-delay {
+  animation-delay: 220ms;
+}
+
+@keyframes niyaaz-card-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.niyaaz-card-enter {
+  animation: niyaaz-card-enter 520ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .niyaaz-logo-animation,
+  .niyaaz-page-enter,
+  .niyaaz-section-enter {
+    animation: none;
+  }
+
+  .niyaaz-card-enter {
+    animation: none;
+  }
+}
+
