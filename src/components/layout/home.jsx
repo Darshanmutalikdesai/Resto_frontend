@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { PhoneCall, Search, Users } from "lucide-react";
+import { PhoneCall, Search, Split } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
 import { getMenuCatalogApi } from "../../lib/api/menuApi";
 import { callWaiterApi } from "../../lib/api/serviceApi";
-import { createBillGroupApi, getCombinedBillApi, joinBillGroupApi } from "../../lib/api/billGroupApi";
 import { CATEGORY_LIST } from "../../data/products";
 import { normalizeCategoryName } from "../../lib/api/menuApiHelpers";
 import niyaazLogo from "../../assets/image.png";
@@ -36,77 +35,6 @@ export default function HomePage() {
   const [isCallingWaiter, setIsCallingWaiter] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [billGroupCode, setBillGroupCode] = useState("");
-  const [billGroupMessage, setBillGroupMessage] = useState("");
-  const [combinedBill, setCombinedBill] = useState(null);
-  const [isBillGroupLoading, setIsBillGroupLoading] = useState(false);
-
-  const getCustomerName = () => {
-    try {
-      return JSON.parse(localStorage.getItem("niyaaz-customer") || "{}").name || "";
-    } catch {
-      return "";
-    }
-  };
-
-  const handleCreateBillGroup = async () => {
-    setIsBillGroupLoading(true);
-    setBillGroupMessage("");
-    try {
-      const group = await createBillGroupApi({ name: getCustomerName() || null });
-      const code = group?.code || group?.billCode || group?.data?.code;
-      if (code) {
-        setBillGroupCode(code);
-        setBillGroupMessage(`Bill group created: ${code}`);
-      } else {
-        setBillGroupMessage("Bill group created successfully.");
-      }
-    } catch (error) {
-      setBillGroupMessage(error?.message || "Unable to create bill group.");
-    } finally {
-      setIsBillGroupLoading(false);
-    }
-  };
-
-  const handleJoinBillGroup = async () => {
-    const code = billGroupCode.trim();
-    if (!code) {
-      setBillGroupMessage("Enter a bill group code first.");
-      return;
-    }
-
-    setIsBillGroupLoading(true);
-    setBillGroupMessage("");
-    try {
-      await joinBillGroupApi({ code });
-      setBillGroupMessage("You joined the bill group.");
-    } catch (error) {
-      setBillGroupMessage(error?.message || "Unable to join bill group.");
-    } finally {
-      setIsBillGroupLoading(false);
-    }
-  };
-
-  const handleGetCombinedBill = async () => {
-    const code = billGroupCode.trim();
-    if (!code) {
-      setBillGroupMessage("Enter a bill group code first.");
-      return;
-    }
-
-    setIsBillGroupLoading(true);
-    setBillGroupMessage("");
-    try {
-      const bill = await getCombinedBillApi(code);
-      setCombinedBill(bill);
-      setBillGroupMessage("Combined bill loaded.");
-    } catch (error) {
-      setBillGroupMessage(error?.message || "Unable to load combined bill.");
-    } finally {
-      setIsBillGroupLoading(false);
-    }
-  };
-
   const handleCallWaiter = async () => {
     const sessionId = window.prompt("Please enter your table session ID");
     if (!sessionId?.trim() || isCallingWaiter) {
@@ -185,16 +113,16 @@ export default function HomePage() {
   return (
     <div className="w-full min-h-screen bg-white">
       <div className="niyaaz-page-enter sticky top-0 z-50 bg-white border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-10 py-10 flex items-center justify-between">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 sm:py-6 lg:px-10 lg:py-8">
           <div className="flex items-center gap-3">
-            <img src={niyaazLogo} alt="Niyaaz" className="niyaaz-logo-animation h-14 w-40 object-contain object-left sm:h-16 sm:w-48" />
+            <img src={niyaazLogo} alt="Niyaaz" className="niyaaz-logo-animation h-11 w-32 object-contain object-left sm:h-16 sm:w-48" />
           </div>
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={handleCallWaiter}
               disabled={isCallingWaiter}
-              className="flex h-10 items-center gap-2 rounded-full bg-emerald-600 px-4 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-wait disabled:opacity-60"
+              className="flex h-10 shrink-0 items-center gap-2 rounded-full bg-emerald-600 px-3 text-xs font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-wait disabled:opacity-60 sm:px-4 sm:text-sm"
             >
               <PhoneCall size={16} />
               {isCallingWaiter ? "Calling..." : "Call Waiter"}
@@ -204,7 +132,7 @@ export default function HomePage() {
         {waiterMessage && <p className="border-t border-gray-100 px-6 py-2 text-center text-xs font-medium text-emerald-700">{waiterMessage}</p>}
       </div>
 
-      <div className="niyaaz-page-enter max-w-7xl mx-auto px-6 py-8">
+      <div className="niyaaz-page-enter mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-10">
         <div className="relative mb-8 flex min-h-14 items-center justify-center">
           <div className={`relative flex items-center overflow-hidden rounded-full border border-emerald-700/10 bg-gray-50 transition-all duration-300 ${isSearchOpen ? "w-full max-w-md px-4" : "w-14"}`}>
             {isSearchOpen && (
@@ -249,23 +177,13 @@ export default function HomePage() {
           )}
         </div>
 
-        <section className="niyaaz-section-enter mb-10 rounded-[24px] bg-[#06483e] p-6 text-white shadow-xl sm:p-7">
-          <div className="flex items-center gap-2">
-            <Users size={20} className="text-[#ff7a00]" />
-            <h2 className="font-semibold">Split the bill <span className="text-xs font-normal text-white/55">(Optional)</span></h2>
-          </div>
-          <p className="mt-2 max-w-md text-sm leading-relaxed text-white/65">Optional: join a bill group with your friends using their code.</p>
-          <button type="button" onClick={handleCreateBillGroup} disabled={isBillGroupLoading} className="mt-5 w-full rounded-xl border border-white/20 px-4 py-3 text-sm font-semibold transition hover:border-[#ff7a00] hover:text-[#ffb36b] disabled:opacity-60">
-            Create bill group
-          </button>
-          <div className="mt-3 flex gap-2">
-            <input value={billGroupCode} onChange={(event) => setBillGroupCode(event.target.value)} placeholder="Enter group code" className="min-w-0 flex-1 rounded-xl border border-white/20 bg-white/10 px-3 py-3 text-sm text-white outline-none placeholder:text-white/45 focus:border-[#ff7a00]" type="text" />
-            <button type="button" onClick={handleJoinBillGroup} disabled={isBillGroupLoading} className="rounded-xl bg-white px-4 py-3 text-xs font-bold text-[#06483e] transition hover:bg-[#ffb36b] disabled:opacity-60">Join</button>
-          </div>
-          <button type="button" onClick={handleGetCombinedBill} disabled={isBillGroupLoading} className="mt-3 w-full rounded-xl bg-[#ff7a00] px-4 py-3 font-bold text-white transition hover:bg-[#e86100] disabled:opacity-60">View combined bill</button>
-          {billGroupMessage && <p className="mt-3 text-xs text-[#ffcf9f]">{billGroupMessage}</p>}
-          {combinedBill && <pre className="mt-3 max-h-32 overflow-auto rounded-xl bg-black/15 p-3 text-[11px] text-white/80">{JSON.stringify(combinedBill, null, 2)}</pre>}
-        </section>
+        <button type="button" onClick={() => navigate("/split-bill")} className="niyaaz-section-enter mb-10 flex w-full items-center justify-between rounded-[24px] bg-[#06483e] p-6 text-left text-white shadow-xl transition hover:bg-[#075b4e] sm:p-7">
+          <span>
+            <span className="flex items-center gap-2 font-semibold"><Split size={20} className="text-[#ff7a00]" /> Split the bill</span>
+            <span className="mt-2 block text-sm text-white/65">Create or join a group bill with your table.</span>
+          </span>
+          <span className="rounded-full bg-[#ff7a00] px-4 py-2 text-sm font-bold">Open</span>
+        </button>
 
         <div className="niyaaz-section-enter mb-10">
           <div className="mb-6 flex items-center justify-between">
@@ -316,21 +234,21 @@ export default function HomePage() {
               </button>
             )}
           </div>
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-2 gap-3 sm:gap-6">
             {previewItems.length > 0 ? (
               previewItems.map((product) => (
                 <div
                   key={product.id}
-                  className="niyaaz-card-enter bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:-translate-y-1 hover:shadow-lg transition"
+                  className="niyaaz-card-enter flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
                   style={{ animationDelay: `${Math.min(previewItems.indexOf(product), 7) * 70}ms` }}
                 >
                   <img
                     src={product.image}
                     alt={product.name}
-                    className="h-40 w-full object-cover"
+                    className="h-36 w-full object-cover sm:h-40"
                     loading="lazy"
                   />
-                  <div className="p-4">
+                  <div className="flex flex-1 flex-col p-3 sm:p-4">
                     <h3 className="font-bold text-gray-900 text-base mb-1">{product.name}</h3>
                     <p className="text-xs text-gray-500 mb-3">{product.description || product.category || "Fresh menu item"}</p>
                     <div className="flex items-center justify-end gap-3 mb-3">
@@ -341,7 +259,7 @@ export default function HomePage() {
                       onClick={async () => {
                         await addToCart(product.id, 1);
                       }}
-                      className="w-full rounded-xl bg-emerald-600 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
+                      className="mt-auto w-full rounded-xl bg-emerald-600 px-2 py-2 text-xs font-semibold text-white hover:bg-emerald-700 sm:px-3 sm:text-sm"
                     >
                       Add to cart
                     </button>
@@ -349,7 +267,7 @@ export default function HomePage() {
                 </div>
               ))
             ) : (
-              <div className="col-span-2 rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-8 text-center text-gray-500">
+              <div className="rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-6 text-center text-gray-500 min-[480px]:col-span-2 sm:p-8">
                 {selectedCategory
                   ? `No ${searchParams.get("category")} items are available yet.`
                   : searchQuery

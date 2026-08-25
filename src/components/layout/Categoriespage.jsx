@@ -32,7 +32,7 @@ export default function CategoriesPage() {
         </div>
       </div>
 
-      <div className="px-5 flex flex-col gap-3">
+      <div className="px-4 sm:px-5 flex flex-col gap-3">
         <button
           type="button"
           onClick={() => navigate("/home?category=all")}

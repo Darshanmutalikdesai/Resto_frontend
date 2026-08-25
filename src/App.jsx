@@ -11,11 +11,26 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import NiyaazLandingPage from "./components/NiyaazLandingPage";
 import HomePage from "./pages/HomePage";
 import Cart from "./components/pages/Cart";
+import Bill from "./components/pages/Bill";
+import SplitBill from "./components/pages/SplitBill";
 import CategoriesPage from "./components/layout/Categoriespage";
 import Footer from "./components/layout/Footer";
 import { BottomNav } from "./components/UI";
 
 const queryClient = new QueryClient();
+
+function hasCustomerDetails() {
+  try {
+    const customer = JSON.parse(localStorage.getItem("niyaaz-customer") || "{}");
+    return Boolean(customer.name?.trim() && customer.phone?.trim() && customer.tableNumber?.trim());
+  } catch {
+    return false;
+  }
+}
+
+function RequireCustomerDetails({ children }) {
+  return hasCustomerDetails() ? children : <Navigate to="/" replace />;
+}
 
 function AppShell() {
   const location = useLocation();
@@ -26,6 +41,8 @@ function AppShell() {
   const showFooter = location.pathname !== "/";
   const active = location.pathname === "/cart"
     ? "cart"
+    : location.pathname === "/bill"
+      ? "bill"
     : location.pathname === "/categories"
       ? "menu"
       : "home";
@@ -43,9 +60,11 @@ function AppShell() {
         >
           <Routes location={location}>
             <Route path="/" element={<NiyaazLandingPage />} />
-            <Route path="/home" element={<HomePage />} />
-            <Route path="/cart" element={<Cart />} />
-            <Route path="/categories" element={<CategoriesPage />} />
+            <Route path="/home" element={<RequireCustomerDetails><HomePage /></RequireCustomerDetails>} />
+            <Route path="/cart" element={<RequireCustomerDetails><Cart /></RequireCustomerDetails>} />
+            <Route path="/bill" element={<RequireCustomerDetails><Bill /></RequireCustomerDetails>} />
+            <Route path="/split-bill" element={<SplitBill />} />
+            <Route path="/categories" element={<RequireCustomerDetails><CategoriesPage /></RequireCustomerDetails>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </motion.div>

@@ -42,7 +42,6 @@ export default function CartPage() {
       return "";
     }
   });
-  const [tableNumber, setTableNumber] = useState("");
   const [tableError, setTableError] = useState("");
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
@@ -92,16 +91,22 @@ export default function CartPage() {
 
     const normalizedCustomerName = customerName.trim();
     const normalizedCustomerPhone = customerPhone.trim();
-    const normalizedTableNumber = tableNumber.trim();
+    let savedCustomer = {};
+    try {
+      savedCustomer = JSON.parse(localStorage.getItem("niyaaz-customer") || "{}");
+    } catch {
+      savedCustomer = {};
+    }
+    const normalizedTableNumber = String(savedCustomer.tableNumber || "").trim();
     if (!normalizedCustomerName || !normalizedCustomerPhone || !normalizedTableNumber) {
-      setTableError("Please enter your name, phone number, and table number before checkout.");
+      setTableError("Please return to the start screen and add your table number first.");
       return;
     }
 
     setTableError("");
     setIsCheckingOut(true);
     try {
-      await createOrderApi({
+      const order = await createOrderApi({
         items: items.map(([id, qty]) => ({
           menuItemId: Number(id),
           itemId: Number(id),
@@ -112,6 +117,18 @@ export default function CartPage() {
         customerPhone: normalizedCustomerPhone,
         tableNumber: normalizedTableNumber,
       });
+
+      let history = [];
+      try {
+        const storedHistory = JSON.parse(localStorage.getItem("niyaaz-order-history") || "[]");
+        history = Array.isArray(storedHistory) ? storedHistory : [];
+      } catch {
+        history = [];
+      }
+      localStorage.setItem("niyaaz-order-history", JSON.stringify([
+        { ...order, items, total, tableNumber: normalizedTableNumber, createdAt: new Date().toISOString() },
+        ...history,
+      ]));
 
       await clearCart();
       setOrderPlaced(true);
@@ -136,7 +153,7 @@ export default function CartPage() {
         {items.length === 0 ? (
           <div className="flex min-h-[55vh] flex-col items-center justify-center rounded-[28px] bg-[#f7f0e6] px-6 text-center shadow-sm">
             <ShoppingBasket size={48} className="mb-5 text-[#f45b0c]" />
-            <h1 className="text-4xl font-semibold tracking-tight">Your cart is empty</h1>
+            <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Your cart is empty</h1>
             <p className="mt-3 text-[#06483e]/65">Add something delicious from the menu.</p>
             <button type="button" onClick={() => navigate("/home")} className="mt-7 rounded-full bg-[#f45b0c] px-7 py-3 font-bold text-white transition hover:bg-[#d94805]">
               Browse menu
@@ -147,7 +164,7 @@ export default function CartPage() {
             <section className="rounded-[28px] bg-[#f7f0e6] p-5 shadow-sm sm:p-8">
               <div className="mb-8 flex items-end justify-between gap-4 border-b border-[#06483e]/15 pb-5">
                 <div>
-                  <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">Your cart</h1>
+                  <h1 className="text-3xl font-semibold tracking-tight sm:text-5xl">Your cart</h1>
                   <p className="mt-2 text-sm text-[#06483e]/65">Review your order before checkout.</p>
                 </div>
                 <span className="text-sm font-semibold">{itemCount} {itemCount === 1 ? "item" : "items"}</span>
@@ -201,14 +218,10 @@ export default function CartPage() {
                 <div className="flex justify-between pt-2 text-lg font-bold"><span>Total</span><span className="text-[#ff7a00]">{fmt(total)}</span></div>
               </div>
 
-              <div className="mt-5 space-y-4">
-                <label htmlFor="table-number" className="mb-2 block text-sm font-semibold">Table number</label>
-                <input id="table-number" type="text" value={tableNumber} onChange={(event) => { setTableNumber(event.target.value); if (tableError) setTableError(""); }} placeholder="Enter your table number" className="w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white outline-none placeholder:text-white/45 focus:border-[#ff7a00]" />
-                {tableError && <p className="mt-2 text-xs text-orange-200">{tableError}</p>}
-              </div>
+              {tableError && <p className="mt-5 text-xs text-orange-200">{tableError}</p>}
 
               <button onClick={handleCheckout} disabled={isCheckingOut} type="button" className="mt-5 flex w-full items-center justify-center gap-2 rounded-full bg-[#ff6500] px-5 py-3.5 font-bold text-white transition hover:bg-[#e85400] disabled:cursor-wait disabled:opacity-60">
-                <ArrowRight size={18} /> {isCheckingOut ? "Placing order..." : "Checkout"}
+                <ArrowRight size={18} /> {isCheckingOut ? "Confirming order..." : "Confirm order"}
               </button>
               {amountToMinimum > 0 && <p className="mt-4 text-center text-xs leading-relaxed text-white/65">Add {fmt(amountToMinimum)} more to reach the minimum order.</p>}
 
@@ -231,6 +244,13 @@ export default function CartPage() {
               className="mt-6 w-full rounded-xl bg-emerald-600 px-5 py-3 font-bold text-white transition hover:bg-emerald-700"
             >
               Back to menu
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate("/bill")}
+              className="mt-3 w-full rounded-xl border border-slate-200 px-5 py-3 font-bold text-slate-700 transition hover:bg-slate-50"
+            >
+              View bill history
             </button>
           </div>
         </div>

@@ -1,5 +1,5 @@
 import React from "react";
-import { Home, ShoppingCart, Utensils } from "lucide-react";
+import { FileText, Home, ShoppingCart, Utensils } from "lucide-react";
 
 export const GreenButton = ({ children, onClick, className = "" }) => (
   <button
@@ -56,12 +56,13 @@ export const BottomNav = ({ active = "home", cartCount = 0, onNavigate }) => {
     { key: "home", label: "Home", icon: Home, path: "/home" },
     { key: "menu", label: "Menu", icon: Utensils, path: "/categories" },
     { key: "cart", label: "Cart", icon: ShoppingCart, path: "/cart" },
+    { key: "bill", label: "Bill", icon: FileText, path: "/bill" },
   ];
 
   return (
     <nav
       aria-label="Primary navigation"
-      className="fixed bottom-5 left-1/2 z-50 w-[min(92vw,380px)] -translate-x-1/2 rounded-[24px] border border-white/10 bg-[#111827]/95 p-1.5 shadow-[0_20px_40px_rgba(0,0,0,0.35)] backdrop-blur-sm"
+      className="fixed bottom-0 left-1/2 z-50 w-full max-w-[420px] -translate-x-1/2 rounded-t-[22px] border border-white/10 bg-[#111827]/95 px-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-12px_30px_rgba(0,0,0,0.2)] backdrop-blur-sm sm:bottom-4 sm:w-[min(92vw,420px)] sm:rounded-[24px] sm:pb-2"
     >
       <div className="flex items-center gap-1">
         {items.map(({ key, label, icon: Icon, path }) => {
