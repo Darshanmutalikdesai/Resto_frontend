@@ -36,15 +36,15 @@ export default function HomePage() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const handleCallWaiter = async () => {
-    const sessionId = window.prompt("Please enter your table session ID");
-    if (!sessionId?.trim() || isCallingWaiter) {
+    const tableNumber = window.prompt("Please enter your table number");
+    if (!tableNumber?.trim() || isCallingWaiter) {
       return;
     }
 
     setIsCallingWaiter(true);
     setWaiterMessage("");
     try {
-      await callWaiterApi(sessionId.trim());
+      await callWaiterApi({ tableNumber });
       setWaiterMessage("Waiter called successfully.");
     } catch {
       setWaiterMessage("Unable to call the waiter. Please try again.");

@@ -8,6 +8,7 @@ export default function SplitBill() {
   const [code, setCode] = useState("");
   const [message, setMessage] = useState("");
   const [combinedBill, setCombinedBill] = useState(null);
+  const [hasJoinedGroup, setHasJoinedGroup] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const customerName = (() => {
@@ -24,7 +25,9 @@ export default function SplitBill() {
     try {
       const result = await action();
       if (result?.code || result?.billCode || result?.data?.code) {
-        setCode(result.code || result.billCode || result.data.code);
+        const groupCode = result.code || result.billCode || result.data.code;
+        setCode(groupCode);
+        localStorage.setItem("niyaaz-bill-group-code", groupCode);
       }
       setMessage(successMessage);
     } catch (error) {
@@ -44,7 +47,13 @@ export default function SplitBill() {
       setMessage("Enter a bill group code first.");
       return;
     }
-    return runAction(() => joinBillGroupApi({ code: code.trim() }), "You joined the bill group.");
+    return runAction(async () => {
+      const result = await joinBillGroupApi({ code: code.trim() });
+      localStorage.setItem("niyaaz-bill-group-code", code.trim());
+      setHasJoinedGroup(true);
+      setCombinedBill(null);
+      return result;
+    }, "You joined the group successfully.");
   };
 
   const loadBill = () => {
@@ -73,8 +82,36 @@ export default function SplitBill() {
             <button type="button" onClick={joinGroup} disabled={isLoading} className="rounded-xl bg-white px-5 py-3 text-sm font-bold text-[#06483e] hover:bg-[#ffb36b] disabled:opacity-60">Join group</button>
           </div>
           <button type="button" onClick={loadBill} disabled={isLoading} className="mt-3 w-full rounded-xl bg-[#ff7a00] px-4 py-3 font-bold text-white hover:bg-[#e86100] disabled:opacity-60">View combined bill</button>
-          {message && <p className="mt-4 text-sm text-[#ffcf9f]">{message}</p>}
-          {combinedBill && <pre className="mt-4 max-h-64 overflow-auto rounded-xl bg-black/15 p-4 text-xs text-white/80">{JSON.stringify(combinedBill, null, 2)}</pre>}
+          {message && <p className={`mt-4 text-sm ${hasJoinedGroup && !combinedBill ? "font-semibold text-[#b8f3d0]" : "text-[#ffcf9f]"}`}>{message}</p>}
+          {hasJoinedGroup && !combinedBill && (
+            <div className="mt-4 rounded-xl border border-white/15 bg-white/10 p-4">
+              <p className="font-semibold">You are ready to order.</p>
+              <p className="mt-1 text-sm text-white/65">Add your dishes to the cart and they will be included in the shared bill.</p>
+              <button type="button" onClick={() => navigate("/home")} className="mt-4 w-full rounded-xl bg-white px-4 py-3 text-sm font-bold text-[#06483e] hover:bg-[#ffb36b]">Add items to cart</button>
+            </div>
+          )}
+          {combinedBill && (
+            <div className="mt-4 rounded-xl bg-white p-4 text-[#06483e]">
+              <div className="flex items-center justify-between gap-4 border-b border-[#06483e]/10 pb-3">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wider text-[#f45b0c]">Shared bill</p>
+                  <p className="mt-1 font-bold">Group {combinedBill.group?.code || code}</p>
+                </div>
+                <p className="text-lg font-black">₹{combinedBill.combined?.totalAmount ?? combinedBill.totalAmount ?? 0}</p>
+              </div>
+              <div className="mt-3 space-y-2 text-sm">
+                {(combinedBill.combined?.items || combinedBill.items || []).length > 0 ? (
+                  (combinedBill.combined?.items || combinedBill.items).map((item, index) => (
+                    <div key={item.id || item.menuItemId || index} className="flex justify-between gap-4">
+                      <span>{item.quantity || item.qty || 1}x {item.name || item.menuItemName || "Menu item"}</span>
+                      <span className="font-semibold">₹{item.total ?? item.price ?? 0}</span>
+                    </div>
+                  ))
+                ) : <p className="text-[#06483e]/60">No items have been added to the shared bill yet.</p>}
+              </div>
+              <button type="button" onClick={() => navigate("/home")} className="mt-4 w-full rounded-xl bg-[#06483e] px-4 py-3 text-sm font-bold text-white hover:bg-[#075b4e]">Add items to cart</button>
+            </div>
+          )}
         </section>
       </div>
     </main>

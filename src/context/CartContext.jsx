@@ -43,9 +43,22 @@ function normalizeCartPayload(payload) {
   return {};
 }
 
+function readSavedCart() {
+  try {
+    const savedCart = JSON.parse(localStorage.getItem("niyaaz-cart") || "{}");
+    return savedCart && typeof savedCart === "object" ? savedCart : {};
+  } catch {
+    return {};
+  }
+}
+
 export const CartProvider = ({ children }) => {
-  const [cart, setCart] = useState({});
+  const [cart, setCart] = useState(readSavedCart);
   const cartCount = Object.values(cart).reduce((sum, qty) => sum + Number(qty || 0), 0);
+
+  useEffect(() => {
+    localStorage.setItem("niyaaz-cart", JSON.stringify(cart));
+  }, [cart]);
 
   useEffect(() => {
     let isActive = true;

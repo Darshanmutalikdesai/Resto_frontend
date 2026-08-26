@@ -11,6 +11,7 @@ import { QtyStepper } from "../UI";
 import { useCart } from "../../context/CartContext";
 import { getMenuCatalogApi } from "../../lib/api/menuApi";
 import { createOrderApi } from "../../lib/api/orderApi";
+import { checkoutBillGroupApi } from "../../lib/api/billGroupApi";
 
 const MIN_ORDER = 20;
 
@@ -106,7 +107,7 @@ export default function CartPage() {
     setTableError("");
     setIsCheckingOut(true);
     try {
-      const order = await createOrderApi({
+      const checkoutPayload = {
         items: items.map(([id, qty]) => ({
           menuItemId: Number(id),
           itemId: Number(id),
@@ -116,7 +117,14 @@ export default function CartPage() {
         customerName: normalizedCustomerName,
         customerPhone: normalizedCustomerPhone,
         tableNumber: normalizedTableNumber,
-      });
+      };
+      const billGroupCode = localStorage.getItem("niyaaz-bill-group-code")?.trim();
+      const order = billGroupCode
+        ? await checkoutBillGroupApi(billGroupCode)
+        : await createOrderApi(checkoutPayload);
+      if (billGroupCode) {
+        localStorage.removeItem("niyaaz-bill-group-code");
+      }
 
       let history = [];
       try {
