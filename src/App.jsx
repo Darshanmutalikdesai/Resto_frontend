@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import "./App.css";
@@ -16,6 +17,7 @@ import SplitBill from "./components/pages/SplitBill";
 import CategoriesPage from "./components/layout/Categoriespage";
 import Footer from "./components/layout/Footer";
 import { BottomNav } from "./components/UI";
+import CookingLoader from "./components/CookingLoader";
 
 const queryClient = new QueryClient();
 
@@ -76,6 +78,17 @@ function AppShell() {
 }
 
 function App() {
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setIsLoading(false), 1800);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  if (isLoading) {
+    return <CookingLoader />;
+  }
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>

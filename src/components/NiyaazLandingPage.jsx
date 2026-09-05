@@ -28,11 +28,21 @@ export default function NiyaazLandingPage() {
 
   const handleGetStarted = () => {
     const name = customerName.trim();
-    const phone = customerPhone.trim();
-    const table = tableNumber.trim();
+    const phone = customerPhone.replace(/\D/g, "");
+    const table = tableNumber.trim().toUpperCase();
 
-    if (!name || !phone || !table) {
-      setFormError("Please enter your name, phone number, and table number to continue.");
+    if (!/^[A-Za-z][A-Za-z '\u002D]*$/.test(name)) {
+      setFormError("Enter a valid name using letters only.");
+      return;
+    }
+
+    if (!/^\d{10}$/.test(phone)) {
+      setFormError("Enter a valid 10-digit phone number.");
+      return;
+    }
+
+    if (!/^T(?:[1-9]|10)$/.test(table)) {
+      setFormError("Enter a valid table number from T1 to T10.");
       return;
     }
 
@@ -47,9 +57,9 @@ export default function NiyaazLandingPage() {
     try {
       const url = new URL(value);
       const scannedTable = url.searchParams.get("table") || url.searchParams.get("tableNumber");
-      setTableNumber(scannedTable || value);
+      setTableNumber((scannedTable || value).toUpperCase());
     } catch {
-      setTableNumber(value);
+      setTableNumber(value.toUpperCase());
     }
     setIsScannerOpen(false);
     setFormError("");
@@ -94,14 +104,14 @@ export default function NiyaazLandingPage() {
               Phone number
               <span className="relative mt-2 block">
                 <Phone size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#06483e]/45" />
-                <input type="tel" inputMode="tel" value={customerPhone} onChange={(event) => { setCustomerPhone(event.target.value); setFormError(""); }} placeholder="Enter your phone number" className="w-full rounded-2xl border border-[#06483e]/15 bg-white py-3.5 pl-11 pr-4 text-sm font-medium outline-none transition placeholder:text-[#06483e]/35 focus:border-[#f45b0c] focus:ring-4 focus:ring-[#f45b0c]/10" />
+                <input type="tel" inputMode="numeric" pattern="[0-9]{10}" maxLength={10} value={customerPhone} onChange={(event) => { setCustomerPhone(event.target.value.replace(/\D/g, "")); setFormError(""); }} placeholder="Enter 10-digit phone number" className="w-full rounded-2xl border border-[#06483e]/15 bg-white py-3.5 pl-11 pr-4 text-sm font-medium outline-none transition placeholder:text-[#06483e]/35 focus:border-[#f45b0c] focus:ring-4 focus:ring-[#f45b0c]/10" />
               </span>
             </label>
             <label className="block text-sm font-bold">
               Table number
               <span className="relative mt-2 block">
                 <UtensilsCrossed size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#06483e]/45" />
-                <input type="text" value={tableNumber} onChange={(event) => { setTableNumber(event.target.value); setFormError(""); }} placeholder="Enter table number" className="w-full rounded-2xl border border-[#06483e]/15 bg-white py-3.5 pl-11 pr-14 text-sm font-medium outline-none transition placeholder:text-[#06483e]/35 focus:border-[#f45b0c] focus:ring-4 focus:ring-[#f45b0c]/10" />
+                <input type="text" value={tableNumber} onChange={(event) => { setTableNumber(event.target.value.toUpperCase()); setFormError(""); }} placeholder="Enter table number (T1-T10)" pattern="T(?:[1-9]|10)" className="w-full rounded-2xl border border-[#06483e]/15 bg-white py-3.5 pl-11 pr-14 text-sm font-medium uppercase outline-none transition placeholder:text-[#06483e]/35 focus:border-[#f45b0c] focus:ring-4 focus:ring-[#f45b0c]/10" />
                 <button type="button" onClick={() => setIsScannerOpen((open) => !open)} aria-label="Scan table QR code" className="absolute right-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-xl bg-[#06483e] text-white transition hover:bg-[#f45b0c]">
                   <Camera size={18} />
                 </button>

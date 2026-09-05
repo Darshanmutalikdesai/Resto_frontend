@@ -113,6 +113,165 @@
   animation-delay: 220ms;
 }
 
+.cooking-loader {
+  --loader-green: #06483e;
+  --loader-orange: #f45b0c;
+  --loader-yellow: #f7c66a;
+  align-items: center;
+  background: #fff7ed;
+  color: var(--loader-green);
+  display: flex;
+  justify-content: center;
+  min-height: 100svh;
+  overflow: hidden;
+  position: relative;
+}
+
+.cooking-loader__pattern {
+  background-image: linear-gradient(135deg, transparent 48%, rgba(247, 198, 106, 0.16) 49%, transparent 50%), linear-gradient(45deg, transparent 48%, rgba(244, 91, 12, 0.09) 49%, transparent 50%);
+  background-size: 92px 92px;
+  inset: 0;
+  opacity: 0.8;
+  position: absolute;
+}
+
+.cooking-loader__content {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  padding: 32px 24px;
+  position: relative;
+  text-align: center;
+  z-index: 1;
+}
+
+.cooking-loader__brand {
+  align-items: center;
+  animation: cooking-fade-up 700ms ease-out both;
+  display: flex;
+  font-size: 14px;
+  font-weight: 900;
+  gap: 10px;
+  letter-spacing: 0.22em;
+}
+
+.cooking-loader__brand-mark {
+  align-items: center;
+  background: var(--loader-green);
+  border-radius: 12px;
+  box-shadow: 0 9px 20px rgba(6, 72, 62, 0.2);
+  color: #fff;
+  display: flex;
+  height: 42px;
+  justify-content: center;
+  width: 42px;
+}
+
+.cooking-loader__scene {
+  height: 196px;
+  margin: 20px 0 4px;
+  position: relative;
+  width: 240px;
+}
+
+.cooking-loader__pot {
+  background: var(--loader-green);
+  border-radius: 20px 20px 44px 44px;
+  bottom: 34px;
+  box-shadow: 0 18px 24px rgba(6, 72, 62, 0.2);
+  height: 82px;
+  left: 48px;
+  position: absolute;
+  transform-origin: 50% 100%;
+  width: 144px;
+  animation: cooking-simmer 1.1s ease-in-out infinite;
+}
+
+.cooking-loader__pot::before {
+  background: #0b695b;
+  border: 4px solid var(--loader-green);
+  border-radius: 50%;
+  content: "";
+  height: 30px;
+  left: 5px;
+  position: absolute;
+  top: -16px;
+  width: 126px;
+}
+
+.cooking-loader__food {
+  background: var(--loader-yellow);
+  border-radius: 50%;
+  height: 15px;
+  left: 22px;
+  position: absolute;
+  top: -5px;
+  width: 94px;
+}
+
+.cooking-loader__handle {
+  border: 8px solid var(--loader-green);
+  height: 24px;
+  position: absolute;
+  top: 13px;
+  width: 30px;
+  z-index: -1;
+}
+
+.cooking-loader__handle--left { border-right: 0; border-radius: 16px 0 0 16px; left: -24px; }
+.cooking-loader__handle--right { border-left: 0; border-radius: 0 16px 16px 0; right: -24px; }
+
+.cooking-loader__flame {
+  bottom: 3px;
+  color: var(--loader-orange);
+  left: 108px;
+  position: absolute;
+  animation: cooking-flame 700ms ease-in-out infinite alternate;
+}
+
+.cooking-loader__steam {
+  border-left: 3px solid rgba(6, 72, 62, 0.38);
+  border-radius: 50%;
+  height: 52px;
+  position: absolute;
+  top: 4px;
+  width: 26px;
+  animation: cooking-steam 1.8s ease-in-out infinite;
+}
+
+.cooking-loader__steam--one { left: 91px; }
+.cooking-loader__steam--two { animation-delay: 350ms; left: 119px; }
+.cooking-loader__steam--three { animation-delay: 700ms; left: 146px; }
+.cooking-loader__spark { color: var(--loader-orange); position: absolute; animation: cooking-spark 1.4s ease-in-out infinite; }
+.cooking-loader__spark--one { right: 24px; top: 62px; }
+.cooking-loader__spark--two { left: 25px; top: 80px; animation-delay: 400ms; }
+
+.cooking-loader__eyebrow { color: var(--loader-orange); font-size: 11px; font-weight: 900; letter-spacing: 0.2em; margin: 0 0 10px; text-transform: uppercase; }
+.cooking-loader h1 { font-size: clamp(32px, 8vw, 48px); font-weight: 900; letter-spacing: -0.04em; line-height: 0.98; margin: 0; }
+.cooking-loader h1 em { color: var(--loader-orange); font-style: normal; }
+.cooking-loader__progress { background: rgba(6, 72, 62, 0.12); border-radius: 10px; height: 6px; margin-top: 25px; overflow: hidden; width: min(220px, 70vw); }
+.cooking-loader__progress span { background: var(--loader-orange); border-radius: inherit; display: block; height: 100%; transform-origin: left; animation: cooking-progress 1.8s ease-in-out both; }
+.cooking-loader__note { color: rgba(6, 72, 62, 0.58); font-size: 12px; font-weight: 600; margin: 10px 0 0; }
+
+@keyframes cooking-fade-up { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes cooking-simmer { 50% { transform: rotate(1.5deg) translateY(-2px); } }
+@keyframes cooking-flame { to { transform: scale(1.12) translateY(-2px); } }
+@keyframes cooking-steam { 0%, 100% { opacity: 0.2; transform: translateY(8px) rotate(-10deg); } 50% { opacity: 0.75; transform: translateY(-10px) rotate(10deg); } }
+@keyframes cooking-spark { 0%, 100% { opacity: 0.2; transform: scale(0.8) rotate(0); } 50% { opacity: 1; transform: scale(1.15) rotate(18deg); } }
+@keyframes cooking-progress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .cooking-loader__brand,
+  .cooking-loader__pot,
+  .cooking-loader__flame,
+  .cooking-loader__steam,
+  .cooking-loader__spark,
+  .cooking-loader__progress span {
+    animation: none;
+  }
+  .cooking-loader__progress span { transform: scaleX(1); }
+}
+
 @keyframes niyaaz-card-enter {
   0% {
     opacity: 0;

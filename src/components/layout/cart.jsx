@@ -122,6 +122,18 @@ export default function CartPage() {
       const order = billGroupCode
         ? await checkoutBillGroupApi(billGroupCode)
         : await createOrderApi(checkoutPayload);
+      const orderItems = items.map(([id, qty]) => {
+        const product = productMap[String(id)] || menuItems.find((item) => String(item.id) === String(id));
+        const price = Number(product?.price || 0);
+
+        return {
+          menuItemId: Number(id),
+          name: product?.name || `Item ${id}`,
+          quantity: qty,
+          price,
+          total: price * qty,
+        };
+      });
 
       let history = [];
       try {
@@ -131,7 +143,15 @@ export default function CartPage() {
         history = [];
       }
       localStorage.setItem("niyaaz-order-history", JSON.stringify([
-        { ...order, items, total, tableNumber: normalizedTableNumber, createdAt: new Date().toISOString() },
+        {
+          ...order,
+          items: orderItems,
+          total,
+          customerName: normalizedCustomerName,
+          customerPhone: normalizedCustomerPhone,
+          tableNumber: normalizedTableNumber,
+          createdAt: new Date().toISOString(),
+        },
         ...history,
       ]));
 
