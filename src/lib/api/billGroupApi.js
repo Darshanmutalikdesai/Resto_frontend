@@ -10,6 +10,14 @@ export async function joinBillGroupApi(payload) {
   return unwrapApiResponse(response);
 }
 
+export async function addBillGroupCartItemApi(billCode, menuItemId, quantity) {
+  const response = await apiClient.post(
+    `/api/bill-groups/${encodeURIComponent(billCode)}/cart/items`,
+    { menuItemId: Number(menuItemId), quantity }
+  );
+  return unwrapApiResponse(response);
+}
+
 export async function getCombinedBillApi(billCode) {
   const response = await apiClient.get(`/api/bill-groups/${encodeURIComponent(billCode)}/bill`);
   return unwrapApiResponse(response);

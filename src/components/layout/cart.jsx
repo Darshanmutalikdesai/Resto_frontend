@@ -122,9 +122,6 @@ export default function CartPage() {
       const order = billGroupCode
         ? await checkoutBillGroupApi(billGroupCode)
         : await createOrderApi(checkoutPayload);
-      if (billGroupCode) {
-        localStorage.removeItem("niyaaz-bill-group-code");
-      }
 
       let history = [];
       try {
@@ -139,6 +136,9 @@ export default function CartPage() {
       ]));
 
       await clearCart();
+      if (billGroupCode) {
+        localStorage.removeItem("niyaaz-bill-group-code");
+      }
       setOrderPlaced(true);
     } catch (error) {
       console.error("Checkout failed:", error);

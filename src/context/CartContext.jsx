@@ -5,6 +5,7 @@ import {
   getCartApi,
   removeCartItemApi,
 } from "../lib/api/cartApi";
+import { addBillGroupCartItemApi } from "../lib/api/billGroupApi";
 
 const CartContext = createContext();
 
@@ -96,6 +97,7 @@ export const CartProvider = ({ children }) => {
 
   const addToCart = async (productId, quantity = 1) => {
     const id = String(productId);
+    const billGroupCode = localStorage.getItem("niyaaz-bill-group-code")?.trim();
     const payload = {
       menuItemId: Number(productId),
       itemId: Number(productId),
@@ -103,12 +105,16 @@ export const CartProvider = ({ children }) => {
     };
 
     try {
-      const response = await addCartItemApi(payload);
-      const normalized = normalizeCartPayload(response);
+      if (billGroupCode) {
+        await addBillGroupCartItemApi(billGroupCode, productId, quantity);
+      } else {
+        const response = await addCartItemApi(payload);
+        const normalized = normalizeCartPayload(response);
 
-      if (Object.keys(normalized).length > 0) {
-        setCart(normalized);
-        return;
+        if (Object.keys(normalized).length > 0) {
+          setCart(normalized);
+          return;
+        }
       }
     } catch {
       // Fallback to optimistic local cart state when the API is unavailable.
@@ -149,15 +155,20 @@ export const CartProvider = ({ children }) => {
 
     if (delta > 0) {
       try {
-        const response = await addCartItemApi({
-          menuItemId: Number(productId),
-          itemId: Number(productId),
-          quantity: delta,
-        });
-        const normalized = normalizeCartPayload(response);
-        if (Object.keys(normalized).length > 0) {
-          setCart(normalized);
-          return;
+        const billGroupCode = localStorage.getItem("niyaaz-bill-group-code")?.trim();
+        if (billGroupCode) {
+          await addBillGroupCartItemApi(billGroupCode, productId, delta);
+        } else {
+          const response = await addCartItemApi({
+            menuItemId: Number(productId),
+            itemId: Number(productId),
+            quantity: delta,
+          });
+          const normalized = normalizeCartPayload(response);
+          if (Object.keys(normalized).length > 0) {
+            setCart(normalized);
+            return;
+          }
         }
       } catch {
         // Ignore API failure and preserve local state fallback.
@@ -189,10 +200,14 @@ export const CartProvider = ({ children }) => {
   };
 
   const clearCart = async () => {
-    try {
-      await clearCartApi();
-    } catch {
-      // Keep local fallback below.
+    const billGroupCode = localStorage.getItem("niyaaz-bill-group-code")?.trim();
+
+    if (!billGroupCode) {
+      try {
+        await clearCartApi();
+      } catch {
+        // Keep local fallback below.
+      }
     }
 
     setCart({});
