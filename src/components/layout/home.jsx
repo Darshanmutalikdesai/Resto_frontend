@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { PhoneCall, Search, Split } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
@@ -7,24 +7,6 @@ import { callWaiterApi } from "../../lib/api/serviceApi";
 import { CATEGORY_LIST } from "../../data/products";
 import { normalizeCategoryName } from "../../lib/api/menuApiHelpers";
 import niyaazLogo from "../../assets/image.png";
-
-const CATEGORY_ICONS = {
-  starters: { emoji: "🍢", bg: "bg-orange-100" },
-  biryani: { emoji: "🍚", bg: "bg-yellow-100" },
-  desserts: { emoji: "🍮", bg: "bg-pink-100" },
-  "chef-s-special": { emoji: "🍽️", bg: "bg-emerald-100" },
-  "house-speciality": { emoji: "👨‍🍳", bg: "bg-red-100" },
-  indian: { emoji: "🍛", bg: "bg-orange-100" },
-  chinese: { emoji: "🥡", bg: "bg-rose-100" },
-  soup: { emoji: "🍲", bg: "bg-amber-100" },
-  drinks: { emoji: "🥤", bg: "bg-cyan-100" },
-  beverages: { emoji: "🥤", bg: "bg-cyan-100" },
-  "main-course": { emoji: "🍛", bg: "bg-amber-100" },
-  breads: { emoji: "🫓", bg: "bg-stone-100" },
-  pizza: { emoji: "🍕", bg: "bg-red-100" },
-  burgers: { emoji: "🍔", bg: "bg-orange-100" },
-  salads: { emoji: "🥗", bg: "bg-green-100" },
-};
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -78,10 +60,7 @@ export default function HomePage() {
 
   const selectedCategory = normalizeCategoryName(searchParams.get("category"));
   const isAllMenu = selectedCategory === "all";
-  const categoryItems = selectedCategory && !isAllMenu
-    ? menuItems.filter((product) => product.category === selectedCategory)
-    : [];
-  const displayItems = isAllMenu ? menuItems : selectedCategory ? categoryItems : menuItems;
+  const displayItems = isAllMenu ? menuItems : selectedCategory ? menuItems.filter((product) => product.category === selectedCategory) : menuItems;
   const filteredItems = displayItems.filter((product) => {
     const query = searchQuery.trim().toLowerCase();
     return !query || `${product.name} ${product.description || ""} ${product.category || ""}`.toLowerCase().includes(query);
@@ -94,21 +73,7 @@ export default function HomePage() {
     })
     .filter((product, index, products) => products.findIndex((item) => item.name === product.name) === index)
     .slice(0, 6);
-  const menuCategories = [
-    ...CATEGORY_LIST,
-    ...menuItems
-      .filter((product) => product.category && !CATEGORY_LIST.some((category) => normalizeCategoryName(category.name) === product.category))
-      .map((product) => ({
-        id: product.category,
-        name: product.category
-          .split("-")
-          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-          .join(" "),
-        emoji: CATEGORY_ICONS[product.category]?.emoji || "🍽️",
-        bg: CATEGORY_ICONS[product.category]?.bg || "bg-gray-100",
-      }))
-      .filter((category, index, categories) => categories.findIndex((item) => item.id === category.id) === index),
-  ];
+  const menuCategories = CATEGORY_LIST;
 
   return (
     <div className="w-full min-h-screen bg-white">
@@ -203,7 +168,9 @@ export default function HomePage() {
               <button
                 key={category.id}
                 type="button"
-                onClick={() => navigate(`/home?category=${encodeURIComponent(category.name)}`)}
+                onClick={() => {
+                  navigate(`/home?category=${encodeURIComponent(category.name)}`);
+                }}
                 className={`flex min-w-[112px] flex-col items-center gap-2 rounded-2xl border p-3 text-center transition hover:shadow-md ${
                   selectedCategory === normalizeCategoryName(category.name)
                     ? "border-emerald-500 bg-emerald-50"

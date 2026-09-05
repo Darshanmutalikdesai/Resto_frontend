@@ -1,4 +1,3 @@
-import React from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronRight, Percent, Utensils } from "lucide-react";
 import { ScreenHeader } from "../UI";
@@ -59,9 +58,7 @@ export default function CategoriesPage() {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-gray-900">{cat.name}</p>
-              <p className="text-[11px] text-gray-400">
-                {cat.desc} · {cat.count}
-              </p>
+              <p className="text-[11px] text-gray-400">{cat.desc}</p>
             </div>
             <ChevronRight size={18} className="text-gray-300 shrink-0" />
           </button>

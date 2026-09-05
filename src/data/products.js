@@ -83,14 +83,27 @@ export const HOME_CATEGORIES = [
 ];
 
 export const CATEGORY_LIST = [
-  { id: 1, name: "Starters", emoji: "🍢", bg: "bg-orange-100", desc: "Small plates to begin" },
-  { id: 2, name: "Biryani", emoji: "🍚", bg: "bg-yellow-100", desc: "Aromatic rice favourites" },
-  { id: 3, name: "Desserts", emoji: "🍮", bg: "bg-pink-100", desc: "Something sweet to finish" },
-  { id: 4, name: "Chef's Special", emoji: "🍽️", bg: "bg-emerald-100", desc: "Our chef's favourites" },
-  { id: 5, name: "House Speciality", emoji: "👨‍🍳", bg: "bg-red-100", desc: "Signature dishes from our kitchen" },
-  { id: 6, name: "Indian", emoji: "🍛", bg: "bg-orange-100", desc: "Classic Indian flavours" },
-  { id: 7, name: "Chinese", emoji: "🥡", bg: "bg-rose-100", desc: "Popular Chinese favourites" },
-  { id: 8, name: "Soup", emoji: "🍲", bg: "bg-amber-100", desc: "Warm and comforting bowls" },
+  { id: "soups", name: "Soups", emoji: "🍲", bg: "bg-amber-100", desc: "Warm and comforting bowls" },
+  { id: "shorba", name: "Shorba", emoji: "🥣", bg: "bg-orange-100", desc: "Traditional rich broths" },
+  { id: "kebab-chicken", name: "Kebab - Chicken", emoji: "🍢", bg: "bg-red-100", desc: "Tandoori chicken kebabs" },
+  { id: "kebabs-vegetarian", name: "Kebabs - Vegetarian", emoji: "🥗", bg: "bg-emerald-100", desc: "Vegetarian kebabs" },
+  { id: "kebabs-mutton", name: "Kebabs - Mutton", emoji: "🍖", bg: "bg-rose-100", desc: "Mutton kebabs and chops" },
+  { id: "appetizers-veg", name: "Appetizers - Veg", emoji: "🥬", bg: "bg-green-100", desc: "Vegetarian starters" },
+  { id: "appetizers-non-veg", name: "Appetizers - Non Veg", emoji: "🍗", bg: "bg-red-100", desc: "Chicken and seafood starters" },
+  { id: "sea-food", name: "Sea Food", emoji: "🍤", bg: "bg-cyan-100", desc: "Fresh seafood dishes" },
+  { id: "main-course-signature-gravies", name: "Signature Gravies", emoji: "🍛", bg: "bg-orange-100", desc: "Niyaaz signature gravies" },
+  { id: "main-course-chicken", name: "Main Course - Chicken", emoji: "🍗", bg: "bg-amber-100", desc: "Chicken main course" },
+  { id: "main-course-mutton", name: "Main Course - Mutton", emoji: "🍖", bg: "bg-red-100", desc: "Mutton main course" },
+  { id: "main-course-egg", name: "Main Course - Egg", emoji: "🥚", bg: "bg-yellow-100", desc: "Egg favourites" },
+  { id: "main-course-vegetarian", name: "Main Course - Vegetarian", emoji: "🥘", bg: "bg-emerald-100", desc: "Vegetarian main course" },
+  { id: "rice-biryani", name: "Rice & Biryani", emoji: "🍚", bg: "bg-yellow-100", desc: "Aromatic rice favourites" },
+  { id: "indian-breads", name: "Indian Breads", emoji: "🫓", bg: "bg-stone-100", desc: "Fresh breads from the tandoor" },
+  { id: "accompaniments", name: "Accompaniments", emoji: "🥗", bg: "bg-lime-100", desc: "Salads, raita and sides" },
+  { id: "chinese-rice-noodles", name: "Chinese Rice & Noodles", emoji: "🥡", bg: "bg-rose-100", desc: "Chinese rice and noodles" },
+  { id: "salads-chats", name: "Salads & Chats", emoji: "🥗", bg: "bg-green-100", desc: "Fresh salads and chats" },
+  { id: "beverages", name: "Beverages", emoji: "🥤", bg: "bg-cyan-100", desc: "Tea, coffee and drinks" },
+  { id: "coolers-juices", name: "Coolers & Juices", emoji: "🍹", bg: "bg-sky-100", desc: "Refreshing coolers and juices" },
+  { id: "desserts", name: "Desserts", emoji: "🍮", bg: "bg-pink-100", desc: "Something sweet to finish" },
 ];
 
 export const fmt = (price) =>

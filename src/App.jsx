@@ -11,6 +11,7 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 // Pages / Landing
 import NiyaazLandingPage from "./components/NiyaazLandingPage";
 import HomePage from "./pages/HomePage";
+import MenuImageManager from "./pages/MenuImageManager";
 import Cart from "./components/pages/Cart";
 import Bill from "./components/pages/Bill";
 import SplitBill from "./components/pages/SplitBill";
@@ -63,6 +64,7 @@ function AppShell() {
           <Routes location={location}>
             <Route path="/" element={<NiyaazLandingPage />} />
             <Route path="/home" element={<RequireCustomerDetails><HomePage /></RequireCustomerDetails>} />
+            <Route path="/menu-images" element={<MenuImageManager />} />
             <Route path="/cart" element={<RequireCustomerDetails><Cart /></RequireCustomerDetails>} />
             <Route path="/bill" element={<RequireCustomerDetails><Bill /></RequireCustomerDetails>} />
             <Route path="/split-bill" element={<SplitBill />} />

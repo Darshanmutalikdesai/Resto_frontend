@@ -6,6 +6,11 @@ export async function createMenuItemApi(payload = {}) {
   return unwrapApiResponse(response);
 }
 
+export async function updateMenuItemImageApi(menuItemId, imageUrl) {
+  const response = await apiClient.patch(`/api/menu-items/${menuItemId}`, { imageUrl });
+  return unwrapApiResponse(response);
+}
+
 export async function getMenuCatalogApi(payload = {}) {
   try {
     const requestPayload = {
