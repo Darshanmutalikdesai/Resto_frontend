@@ -1,5 +1,10 @@
 import { apiClient, unwrapApiResponse } from "../apiClient";
-import { normalizeApiMenuItems } from "./menuApiHelpers";
+import { normalizeApiMenuItems, normalizeSerialMenuItems } from "./menuApiHelpers";
+
+export async function getMenuSerialMapApi() {
+  const response = await apiClient.get("/api/menu-items/serial-map");
+  return normalizeSerialMenuItems(unwrapApiResponse(response));
+}
 
 export async function createMenuItemApi(payload = {}) {
   const response = await apiClient.post("/api/menu-items/create", payload);

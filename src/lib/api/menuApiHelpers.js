@@ -228,3 +228,33 @@ export function normalizeApiMenuItems(payload) {
     })
     .filter((item) => item.id && item.name);
 }
+
+export function normalizeSerialMenuItems(payload) {
+  const data = payload?.items || payload?.menuItems || payload?.rows || payload?.data || payload;
+  const entries = Array.isArray(data)
+    ? data.map((item) => [undefined, item])
+    : data && typeof data === "object" && (data.serialNumber || data.name)
+      ? [[undefined, data]]
+      : data && typeof data === "object"
+        ? Object.entries(data)
+        : [];
+
+  return entries
+    .map(([serialKey, value], index) => {
+      const item = value && typeof value === "object" ? value : { name: value };
+      const serialNumber = item.serialNumber ?? item.serialNo ?? item.serial ?? item.number ?? serialKey ?? index + 1;
+      const name = item.name || item.itemName || item.menuItemName || item.title || `Menu item ${serialNumber}`;
+      const id = item.id ?? item.menuItemId ?? item.menu_item_id ?? serialNumber;
+      const imageUrl = item.imageUrl || item.image_url || item.imagePath || item.photoUrl || item.photo || "";
+
+      return {
+        id: String(id),
+        name: String(name),
+        serialNumber: String(serialNumber),
+        category: item?.category?.name || item.categoryName || item.category || "Menu",
+        imageUrl,
+        price: item.price ?? 0,
+      };
+    })
+    .filter((item) => item.name && item.serialNumber);
+}
