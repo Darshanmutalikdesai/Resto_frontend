@@ -20,16 +20,45 @@ export async function getMenuCatalogApi(payload = {}) {
   try {
     const requestPayload = {
       page: 1,
-      limit: 100,
+      limit: 1000,
       ...payload,
     };
 
-    const response = await apiClient.get("/api/menu-items/public");
-    const apiPayload = unwrapApiResponse(response);
-    const normalized = normalizeApiMenuItems(apiPayload);
+    const [catalogResult, serialMapResult] = await Promise.allSettled([
+      apiClient.get("/api/menu-items/public", { params: requestPayload }),
+      getMenuSerialMapApi(),
+    ]);
+    if (catalogResult.status === "rejected") {
+      throw catalogResult.reason;
+    }
 
-    if (normalized.length > 0) {
-      return normalized;
+    const normalized = normalizeApiMenuItems(unwrapApiResponse(catalogResult.value));
+    const serialItems = serialMapResult.status === "fulfilled" ? serialMapResult.value : [];
+    const serialByKey = new Map();
+
+    serialItems.forEach((item) => {
+      const imageUrl = item.imageUrl?.trim();
+      if (!imageUrl) return;
+
+      [item.id, item.serialNumber, item.name].forEach((key) => {
+        if (key != null && String(key).trim()) {
+          serialByKey.set(String(key).trim().toLowerCase(), imageUrl);
+        }
+      });
+    });
+
+    const itemsWithSerialImages = normalized.map((item) => {
+      const imageUrl = [item.id, item.serialNumber, item.name]
+        .map((key) => serialByKey.get(String(key ?? "").trim().toLowerCase()))
+        .find(Boolean);
+
+      return imageUrl
+        ? { ...item, image: imageUrl, databaseImageUrl: imageUrl }
+        : item;
+    });
+
+    if (itemsWithSerialImages.length > 0) {
+      return itemsWithSerialImages;
     }
 
     return [];

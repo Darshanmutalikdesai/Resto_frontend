@@ -4,10 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { getApiErrorMessage } from "../lib/apiClient";
 import { getMenuCatalogApi, updateMenuItemImageApi } from "../lib/api/menuApi";
 
-function getSuggestedImageUrl(item) {
-  return `https://loremflickr.com/900/700/${encodeURIComponent(`${item.name} food dish`)}`;
-}
-
 export default function MenuImageManager() {
   const navigate = useNavigate();
   const [menuItems, setMenuItems] = useState([]);
@@ -26,7 +22,7 @@ export default function MenuImageManager() {
       .then((items) => {
         if (!isMounted) return;
         setMenuItems(items);
-        setImageUrls(Object.fromEntries(items.map((item) => [item.id, item.databaseImageUrl || getSuggestedImageUrl(item)])));
+        setImageUrls(Object.fromEntries(items.map((item) => [item.id, item.databaseImageUrl || ""])));
       })
       .catch((requestError) => {
         if (isMounted) setError(getApiErrorMessage(requestError, "Unable to load menu items."));

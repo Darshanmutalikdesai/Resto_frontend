@@ -209,12 +209,18 @@ export default function HomePage() {
                   className="niyaaz-card-enter flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
                   style={{ animationDelay: `${Math.min(previewItems.indexOf(product), 7) * 70}ms` }}
                 >
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="h-36 w-full object-cover sm:h-40"
-                    loading="lazy"
-                  />
+                  {product.image ? (
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className="h-36 w-full object-cover sm:h-40"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="flex h-36 w-full items-center justify-center bg-gray-100 text-xs font-medium text-gray-400 sm:h-40">
+                      Image unavailable
+                    </div>
+                  )}
                   <div className="flex flex-1 flex-col p-3 sm:p-4">
                     <h3 className="font-bold text-gray-900 text-base mb-1">{product.name}</h3>
                     <p className="text-xs text-gray-500 mb-3">{product.description || product.category || "Fresh menu item"}</p>
