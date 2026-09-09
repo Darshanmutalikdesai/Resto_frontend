@@ -17,6 +17,7 @@ export default function HomePage() {
   const [isCallingWaiter, setIsCallingWaiter] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isMenuLoading, setIsMenuLoading] = useState(true);
   const handleCallWaiter = async () => {
     const tableNumber = window.prompt("Please enter your table number");
     if (!tableNumber?.trim() || isCallingWaiter) {
@@ -39,6 +40,8 @@ export default function HomePage() {
     let isMounted = true;
 
     const loadMenu = async () => {
+      setIsMenuLoading(true);
+
       try {
         const items = await getMenuCatalogApi();
         if (isMounted) {
@@ -47,6 +50,10 @@ export default function HomePage() {
       } catch {
         if (isMounted) {
           setMenuItems([]);
+        }
+      } finally {
+        if (isMounted) {
+          setIsMenuLoading(false);
         }
       }
     };
@@ -202,7 +209,14 @@ export default function HomePage() {
             )}
           </div>
           <div className="grid grid-cols-2 gap-3 sm:gap-6">
-            {previewItems.length > 0 ? (
+            {isMenuLoading ? (
+              <div className="min-[480px]:col-span-2 flex min-h-[220px] items-center justify-center rounded-2xl border border-dashed border-emerald-300 bg-emerald-50/60 p-6 text-center text-gray-500 sm:p-8">
+                <div className="flex flex-col items-center gap-3">
+                  <div className="h-10 w-10 animate-spin rounded-full border-4 border-emerald-200 border-t-emerald-600" />
+                  <p className="text-sm font-semibold text-emerald-700">Loading menu...</p>
+                </div>
+              </div>
+            ) : previewItems.length > 0 ? (
               previewItems.map((product) => (
                 <div
                   key={product.id}

@@ -12,6 +12,7 @@ import { useCart } from "../../context/CartContext";
 import { getMenuCatalogApi } from "../../lib/api/menuApi";
 import { createOrderApi } from "../../lib/api/orderApi";
 import { checkoutBillGroupApi } from "../../lib/api/billGroupApi";
+import { readLocalHistory, saveLocalHistory } from "../../lib/orderHistory";
 
 const MIN_ORDER = 20;
 
@@ -135,14 +136,8 @@ export default function CartPage() {
         };
       });
 
-      let history = [];
-      try {
-        const storedHistory = JSON.parse(localStorage.getItem("niyaaz-order-history") || "[]");
-        history = Array.isArray(storedHistory) ? storedHistory : [];
-      } catch {
-        history = [];
-      }
-      localStorage.setItem("niyaaz-order-history", JSON.stringify([
+      const history = readLocalHistory();
+      saveLocalHistory([
         {
           ...order,
           items: orderItems,
@@ -153,7 +148,7 @@ export default function CartPage() {
           createdAt: new Date().toISOString(),
         },
         ...history,
-      ]));
+      ]);
 
       await clearCart();
       if (billGroupCode) {

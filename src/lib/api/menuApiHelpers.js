@@ -20,6 +20,7 @@ function normalizeMenuCategory(categoryName = "", itemName = "") {
     soups: "soups",
     shorba: "shorba",
     biryani: "rice-biryani",
+    biriyani: "rice-biryani",
     rice: "rice-biryani",
     breads: "indian-breads",
     "indian-breads": "indian-breads",
@@ -31,6 +32,9 @@ function normalizeMenuCategory(categoryName = "", itemName = "") {
 
   if (exactAliases[category]) {
     return exactAliases[category];
+  }
+  if (searchable.includes("biryani") || searchable.includes("biriyani")) {
+    return "rice-biryani";
   }
   if (searchable.includes("cooler") || searchable.includes("juice")) {
     return "coolers-juices";
@@ -107,6 +111,7 @@ export function normalizeApiMenuItems(payload) {
     .map((item, index) => {
       const itemName = item.name || item.itemName || item.menuItemName || item.title || "Menu Item";
       const categoryName =
+        item?.category?.slug ||
         item?.category?.name ||
         item?.categoryName ||
         item?.category ||
