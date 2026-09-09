@@ -67,7 +67,24 @@ export default function HomePage() {
 
   const selectedCategory = normalizeCategoryName(searchParams.get("category"));
   const isAllMenu = selectedCategory === "all";
-  const displayItems = isAllMenu ? menuItems : selectedCategory ? menuItems.filter((product) => product.category === selectedCategory) : menuItems;
+  const displayItems = isAllMenu
+    ? menuItems
+    : selectedCategory
+      ? menuItems.filter((product) => {
+          const productCategory = normalizeCategoryName(product.category || "");
+          const productName = normalizeCategoryName(product.name || "");
+
+          if (productCategory === selectedCategory || productCategory.includes(selectedCategory) || productName.includes(selectedCategory)) {
+            return true;
+          }
+
+          if (selectedCategory === "rice-biryani") {
+            return productCategory.includes("biryani") || productCategory.includes("biriyani") || productName.includes("biryani") || productName.includes("biriyani");
+          }
+
+          return false;
+        })
+      : menuItems;
   const filteredItems = displayItems.filter((product) => {
     const query = searchQuery.trim().toLowerCase();
     return !query || `${product.name} ${product.description || ""} ${product.category || ""}`.toLowerCase().includes(query);

@@ -81,8 +81,7 @@ export default function CartPage() {
     const product = productMap[String(id)] || menuItems.find((item) => String(item.id) === String(id));
     return sum + Number(product?.price || 0) * qty;
   }, 0);
-  const gst = subtotal * 0.05;
-  const total = subtotal + gst;
+  const total = subtotal;
   const itemCount = items.reduce((sum, [, qty]) => sum + qty, 0);
   const amountToMinimum = Math.max(0, MIN_ORDER - subtotal);
 
@@ -233,11 +232,9 @@ export default function CartPage() {
                   <h2 className="text-3xl font-semibold">Subtotal</h2>
                   <span className="text-xl font-bold text-[#ff7a00]">{fmt(subtotal)}</span>
                 </div>
-                <p className="mt-2 text-xs text-white/65">GST is calculated at 5% of your subtotal.</p>
               </div>
 
               <div className="space-y-3 border-b border-white/15 pb-5 text-sm">
-                <div className="flex justify-between"><span className="text-white/70">GST (5%)</span><span>{fmt(gst)}</span></div>
                 <div className="flex justify-between pt-2 text-lg font-bold"><span>Total</span><span className="text-[#ff7a00]">{fmt(total)}</span></div>
               </div>
 
