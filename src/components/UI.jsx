@@ -42,7 +42,7 @@ export const ProductTile = ({ product = {}, qty = 0, onAdd, className = "" }) =>
       <h3 className="font-semibold text-lg text-gray-900 mb-1">{product.name}</h3>
       <p className="text-sm text-gray-500 mb-3">{product.unit || product.description || "Fresh grocery item"}</p>
       <div className="flex items-center justify-between gap-2 mb-4">
-        <span className="text-xl font-bold text-emerald-600">₹{product.price ?? "0"}</span>
+        <span className="price-text text-xl font-bold text-emerald-600">₹{product.price ?? "0"}</span>
       </div>
       <button onClick={onAdd} className="w-full rounded-2xl bg-emerald-600 py-3 text-sm font-semibold text-white" type="button">
         Add to cart{qty ? ` (${qty})` : ""}
@@ -62,7 +62,7 @@ export const BottomNav = ({ active = "home", cartCount = 0, onNavigate }) => {
   return (
     <nav
       aria-label="Primary navigation"
-      className="fixed bottom-0 left-1/2 z-50 w-full max-w-[420px] -translate-x-1/2 rounded-t-[22px] border border-white/10 bg-[#111827]/95 px-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-12px_30px_rgba(0,0,0,0.2)] backdrop-blur-sm sm:bottom-4 sm:w-[min(92vw,420px)] sm:rounded-[24px] sm:pb-2"
+      className="bottom-nav fixed bottom-0 left-1/2 z-50 w-full max-w-[420px] -translate-x-1/2 rounded-t-[22px] border border-white/10 bg-[#111827]/95 px-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-12px_30px_rgba(0,0,0,0.2)] backdrop-blur-sm sm:bottom-4 sm:w-[min(92vw,420px)] sm:rounded-[24px] sm:pb-2"
     >
       <div className="flex items-center gap-1">
         {items.map(({ key, label, icon: Icon, path }) => {
@@ -74,8 +74,8 @@ export const BottomNav = ({ active = "home", cartCount = 0, onNavigate }) => {
               type="button"
               onClick={() => onNavigate?.(path)}
               aria-current={isActive ? "page" : undefined}
-              className={`flex min-h-12 flex-1 items-center justify-center gap-2 rounded-[18px] px-4 text-sm font-medium transition ${
-                isActive ? "bg-white text-gray-950 shadow-sm" : "text-white/60 hover:text-white"
+              className={`nav-item flex min-h-12 flex-1 items-center justify-center gap-2 rounded-[18px] px-4 text-sm font-medium transition ${
+                isActive ? "nav-item-active bg-white text-gray-950 shadow-sm" : "nav-item-inactive text-white/60 hover:text-white"
               }`}
             >
               <span className="relative">

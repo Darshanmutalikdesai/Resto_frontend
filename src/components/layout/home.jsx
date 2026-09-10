@@ -67,7 +67,7 @@ function MenuItemCard({ product, index, quantity, onAdd, onIncrement, onDecremen
           {product.description || "Fresh, made to order"}
         </p>
 
-        <p className="mt-2 text-base font-bold text-[#06483e]">₹{product.price}</p>
+        <p className="price-text mt-2 text-base font-bold text-[#06483e]">₹{product.price}</p>
 
         <div className="mt-2">
           {hasQuantity ? (

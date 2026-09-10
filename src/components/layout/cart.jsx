@@ -183,8 +183,8 @@ export default function CartPage() {
             <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-3xl bg-[#fff1e6]">
               <ShoppingBasket size={34} className="text-[#f45b0c]" strokeWidth={1.75} />
             </div>
-            <h1 className="text-3xl font-black tracking-tight sm:text-4xl">Your cart is empty</h1>
-            <p className="mt-3 max-w-xs text-sm text-[#06483e]/60">
+            <h1 className="cart-empty-title text-3xl font-black tracking-tight sm:text-4xl">Your cart is empty</h1>
+            <p className="cart-empty-description mt-3 max-w-xs text-sm text-[#06483e]/60">
               Add something delicious from the menu to get started.
             </p>
             <button
