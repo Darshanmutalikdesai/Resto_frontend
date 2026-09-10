@@ -20,7 +20,7 @@ export default function Footer() {
             Authentic Belgaum biryani and fresh, comforting meals made with care.
           </p>
           <a
-            href="https://www.instagram.com/"
+            href="https://www.instagram.com/niyaazrestaurants.in?igsh=MXZiajV4cXJndzA4dA=="
             target="_blank"
             rel="noreferrer"
             aria-label="Niyaaz on Instagram"
@@ -50,7 +50,7 @@ export default function Footer() {
             </p>
             <p className="flex items-center gap-3">
               <Phone size={17} className="shrink-0 text-[#f45b0c]" />
-              <a href="tel:+918000000000" className="transition hover:text-white">+91 80000 00000</a>
+              <a href="tel:+91 99000 34419" className="transition hover:text-white">+91 99000 34419</a>
             </p>
             <p className="flex items-center gap-3">
               <Clock3 size={17} className="shrink-0 text-[#f45b0c]" />

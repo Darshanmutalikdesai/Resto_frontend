@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { MoonStar, SunMedium } from "lucide-react";
 import "./App.css";
 
 import { CartProvider, useCart } from "./context/CartContext";
@@ -26,7 +27,14 @@ const queryClient = new QueryClient();
 function hasCustomerDetails() {
   try {
     const customer = JSON.parse(localStorage.getItem("niyaaz-customer") || "{}");
-    return Boolean(customer.name?.trim() && customer.phone?.trim() && customer.tableNumber?.trim());
+    const tableNumber = customer.tableNumber?.trim();
+    const tableExpiresAt = Number(customer.tableNumberExpiresAt || 0);
+
+    if (tableNumber && tableExpiresAt && Date.now() > tableExpiresAt) {
+      return false;
+    }
+
+    return Boolean(customer.name?.trim() && customer.phone?.trim() && tableNumber);
   } catch {
     return false;
   }
@@ -36,7 +44,23 @@ function RequireCustomerDetails({ children }) {
   return hasCustomerDetails() ? children : <Navigate to="/" replace />;
 }
 
-function AppShell() {
+function ThemeToggle({ theme, onToggle }) {
+  const isDark = theme === "dark";
+
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className="theme-toggle"
+      aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+    >
+      {isDark ? <SunMedium size={17} /> : <MoonStar size={17} />}
+      <span>{isDark ? "Light" : "Dark"}</span>
+    </button>
+  );
+}
+
+function AppShell({ theme, setTheme }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { cartCount } = useCart();
@@ -52,15 +76,18 @@ function AppShell() {
       : "home";
 
   return (
-    <div className={`min-h-screen bg-[#f4efe7] text-slate-900 ${showBottomNav ? "pb-24" : ""}`}>
+    <div className={`app-shell min-h-screen ${showBottomNav ? "pb-24" : ""}`}>
+      <div className="theme-toggle-wrap">
+        <ThemeToggle theme={theme} onToggle={() => setTheme((current) => current === "dark" ? "light" : "dark")} />
+      </div>
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
           key={`${location.pathname}${location.search}`}
           className="niyaaz-route-motion"
-          initial={shouldReduceMotion ? false : { opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={shouldReduceMotion ? undefined : { opacity: 0, y: -8 }}
-          transition={{ duration: shouldReduceMotion ? 0 : 0.35, ease: "easeOut" }}
+          initial={shouldReduceMotion ? false : { opacity: 0, y: 32, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={shouldReduceMotion ? undefined : { opacity: 0, y: 24, scale: 0.985 }}
+          transition={{ duration: shouldReduceMotion ? 0 : 0.45, ease: [0.22, 1, 0.36, 1] }}
         >
           <Routes location={location}>
             <Route path="/" element={<NiyaazLandingPage />} />
@@ -83,9 +110,23 @@ function AppShell() {
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
+  const [theme, setTheme] = useState(() => {
+    if (typeof window === "undefined") {
+      return "light";
+    }
+
+    const savedTheme = window.localStorage.getItem("niyaaz-theme");
+    return savedTheme === "dark" || savedTheme === "light" ? savedTheme : "light";
+  });
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setIsLoading(false), 1800);
+    document.documentElement.setAttribute("data-theme", theme);
+    document.documentElement.style.colorScheme = theme;
+    window.localStorage.setItem("niyaaz-theme", theme);
+  }, [theme]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setIsLoading(false), 600);
     return () => window.clearTimeout(timer);
   }, []);
 
@@ -98,7 +139,7 @@ function App() {
       <AuthProvider>
         <CartProvider>
           <BrowserRouter>
-            <AppShell />
+            <AppShell theme={theme} setTheme={setTheme} />
           </BrowserRouter>
         </CartProvider>
       </AuthProvider>

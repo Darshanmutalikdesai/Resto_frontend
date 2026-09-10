@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { PhoneCall, Search, Split } from "lucide-react";
+import { Minus, Plus, PhoneCall, Search, ShoppingBag, Split } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
 import { getMenuCatalogApi } from "../../lib/api/menuApi";
@@ -8,25 +8,138 @@ import { CATEGORY_LIST } from "../../data/products";
 import { normalizeCategoryName } from "../../lib/api/menuApiHelpers";
 import niyaazLogo from "../../assets/image.png";
 
+// Reads the current quantity of a product out of whatever shape `cart`
+// happens to be (array of items, or an id -> qty map), trying the
+// common field names. Falls back to 0 if nothing matches.
+function getCartQuantity(cart, productId) {
+  if (!cart) return 0;
+
+  if (Array.isArray(cart)) {
+    const match = cart.find(
+      (entry) =>
+        entry?.productId === productId ||
+        entry?.id === productId ||
+        entry?.menuItemId === productId ||
+        entry?.product?.id === productId,
+    );
+    return Number(match?.quantity ?? match?.qty ?? 0);
+  }
+
+  if (typeof cart === "object") {
+    return Number(cart[productId] ?? 0);
+  }
+
+  return 0;
+}
+
+function MenuItemCard({ product, index, quantity, onAdd, onIncrement, onDecrement }) {
+  const hasQuantity = quantity > 0;
+
+  return (
+    <div
+      className="niyaaz-card-enter group flex flex-col overflow-hidden rounded-[26px] border border-gray-100 bg-white shadow-[0_2px_12px_rgba(15,44,42,0.06)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_32px_rgba(15,44,42,0.12)]"
+      style={{ animationDelay: `${Math.min(index, 7) * 70}ms` }}
+    >
+      <div className="relative">
+        {product.image ? (
+          <img
+            src={product.image}
+            alt={product.name}
+            className="h-36 w-full object-cover transition duration-500 group-hover:scale-105 sm:h-44"
+            loading="lazy"
+          />
+        ) : (
+          <div className="flex h-36 w-full items-center justify-center bg-gradient-to-br from-emerald-50 to-amber-50 text-xs font-medium text-gray-400 sm:h-44">
+            <ShoppingBag size={26} className="text-emerald-300" />
+          </div>
+        )}
+
+        {product.category && (
+          <span className="absolute left-2.5 top-2.5 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-700 shadow-sm backdrop-blur">
+            {product.category}
+          </span>
+        )}
+      </div>
+
+      <div className="flex flex-1 flex-col p-3.5 sm:p-4">
+        <h3 className="text-[15px] font-bold leading-tight text-gray-900 sm:text-base">{product.name}</h3>
+        <p className="mt-1 line-clamp-2 flex-1 text-xs text-gray-500">
+          {product.description || "Fresh, made to order"}
+        </p>
+
+        <p className="mt-2 text-base font-bold text-[#06483e]">₹{product.price}</p>
+
+        <div className="mt-2">
+          {hasQuantity ? (
+            <div className="flex items-center justify-between rounded-xl bg-emerald-600 px-1.5 py-1.5 text-white shadow-sm">
+              <button
+                type="button"
+                onClick={onDecrement}
+                aria-label={`Remove one ${product.name}`}
+                className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/15 transition hover:bg-white/25 active:scale-95"
+              >
+                <Minus size={15} strokeWidth={2.75} />
+              </button>
+
+              <span className="flex flex-col items-center leading-none">
+                <span className="text-sm font-bold">{quantity}</span>
+                <span className="text-[9px] font-medium uppercase tracking-wide text-white/70">in cart</span>
+              </span>
+
+              <button
+                type="button"
+                onClick={onIncrement}
+                aria-label={`Add one more ${product.name}`}
+                className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/15 transition hover:bg-white/25 active:scale-95"
+              >
+                <Plus size={15} strokeWidth={2.75} />
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={onAdd}
+              className="flex w-full items-center justify-center gap-1.5 rounded-xl border-2 border-emerald-600 px-3 py-2 text-xs font-bold uppercase tracking-wide text-emerald-700 transition hover:bg-emerald-600 hover:text-white active:scale-[0.98] sm:text-sm"
+            >
+              <Plus size={14} strokeWidth={3} />
+              Add to cart
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function HomePage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { addToCart } = useCart();
+  const cartApi = useCart();
+  const { addToCart, cart } = cartApi;
   const [menuItems, setMenuItems] = useState([]);
   const [waiterMessage, setWaiterMessage] = useState("");
   const [isCallingWaiter, setIsCallingWaiter] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isMenuLoading, setIsMenuLoading] = useState(true);
+
   const handleCallWaiter = async () => {
-    const tableNumber = window.prompt("Please enter your table number");
-    if (!tableNumber?.trim() || isCallingWaiter) {
+    if (isCallingWaiter) {
       return;
     }
 
-    setIsCallingWaiter(true);
-    setWaiterMessage("");
     try {
+      const savedCustomer = JSON.parse(localStorage.getItem("niyaaz-customer") || "{}");
+      const tableNumber = (savedCustomer.tableNumber || "").trim();
+
+      if (!tableNumber) {
+        setWaiterMessage("Please enter your table number first on the start screen.");
+        return;
+      }
+
+      setIsCallingWaiter(true);
+      setWaiterMessage("");
+
       await callWaiterApi({ tableNumber });
       setWaiterMessage("Waiter called successfully.");
     } catch {
@@ -34,6 +147,34 @@ export default function HomePage() {
     } finally {
       setIsCallingWaiter(false);
     }
+  };
+
+  // Increment: reuse addToCart, which is assumed to merge quantities
+  // for an id already in the cart.
+  const handleIncrement = async (productId) => {
+    await addToCart(productId, 1);
+  };
+
+  // Decrement: try whichever removal/update function CartContext exposes.
+  // Falls back to a no-op with a console warning if none is found, so this
+  // never throws even if the context shape differs from what's assumed here.
+  const handleDecrement = async (productId) => {
+    const currentQty = getCartQuantity(cart, productId);
+
+    if (typeof cartApi.updateQuantity === "function") {
+      await cartApi.updateQuantity(productId, Math.max(currentQty - 1, 0));
+      return;
+    }
+    if (typeof cartApi.decrementFromCart === "function") {
+      await cartApi.decrementFromCart(productId, 1);
+      return;
+    }
+    if (typeof cartApi.removeFromCart === "function") {
+      await cartApi.removeFromCart(productId, 1);
+      return;
+    }
+
+    console.warn("CartContext has no decrement/update/remove function available.");
   };
 
   useEffect(() => {
@@ -234,41 +375,16 @@ export default function HomePage() {
                 </div>
               </div>
             ) : previewItems.length > 0 ? (
-              previewItems.map((product) => (
-                <div
+              previewItems.map((product, idx) => (
+                <MenuItemCard
                   key={product.id}
-                  className="niyaaz-card-enter flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
-                  style={{ animationDelay: `${Math.min(previewItems.indexOf(product), 7) * 70}ms` }}
-                >
-                  {product.image ? (
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      className="h-36 w-full object-cover sm:h-40"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="flex h-36 w-full items-center justify-center bg-gray-100 text-xs font-medium text-gray-400 sm:h-40">
-                      Image unavailable
-                    </div>
-                  )}
-                  <div className="flex flex-1 flex-col p-3 sm:p-4">
-                    <h3 className="font-bold text-gray-900 text-base mb-1">{product.name}</h3>
-                    <p className="text-xs text-gray-500 mb-3">{product.description || product.category || "Fresh menu item"}</p>
-                    <div className="flex items-center justify-end gap-3 mb-3">
-                      <span className="font-bold text-emerald-600">₹{product.price}</span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        await addToCart(product.id, 1);
-                      }}
-                      className="mt-auto w-full rounded-xl bg-emerald-600 px-2 py-2 text-xs font-semibold text-white hover:bg-emerald-700 sm:px-3 sm:text-sm"
-                    >
-                      Add to cart
-                    </button>
-                  </div>
-                </div>
+                  product={product}
+                  index={idx}
+                  quantity={getCartQuantity(cart, product.id)}
+                  onAdd={() => addToCart(product.id, 1)}
+                  onIncrement={() => handleIncrement(product.id)}
+                  onDecrement={() => handleDecrement(product.id)}
+                />
               ))
             ) : (
               <div className="rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-6 text-center text-gray-500 min-[480px]:col-span-2 sm:p-8">
