@@ -143,6 +143,25 @@ body {
   color: #ffffff !important;
 }
 
+[data-theme="dark"] .bill-page {
+  background: var(--app-bg);
+  color: var(--app-text);
+}
+
+[data-theme="dark"] .bill-page .text-\[#0f2c2a\],
+[data-theme="dark"] .bill-page .text-\[#0f2c2a\]\/80,
+[data-theme="dark"] .bill-page .text-\[#0f2c2a\]\/70,
+[data-theme="dark"] .bill-page .text-\[#0f2c2a\]\/65,
+[data-theme="dark"] .bill-page .text-\[#0f2c2a\]\/60,
+[data-theme="dark"] .bill-page .text-\[#0f2c2a\]\/55,
+[data-theme="dark"] .bill-page .text-\[#0f2c2a\]\/50,
+[data-theme="dark"] .bill-page .text-\[#0f2c2a\]\/45,
+[data-theme="dark"] .bill-page .text-\[#0f2c2a\]\/40,
+[data-theme="dark"] .bill-page .text-\[#0f2c2a\]\/30,
+[data-theme="dark"] .bill-page .text-\[#0f2c2a\]\/20 {
+  color: #ffffff !important;
+}
+
 [data-theme="dark"] .text-gray-700,
 [data-theme="dark"] .text-gray-600,
 [data-theme="dark"] .text-slate-700,

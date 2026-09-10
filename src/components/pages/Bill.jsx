@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, ArrowRight, ChefHat, FileText, Flame, RefreshCw, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import CookingLoader from "../CookingLoader";
+import { getCombinedBillApi } from "../../lib/api/billGroupApi";
 import { myOrdersApi } from "../../lib/api/orderApi";
 import { readLocalHistory } from "../../lib/orderHistory";
 
@@ -16,6 +17,16 @@ function getOrderItems(order) {
 
   if (items && typeof items === "object") {
     return Object.entries(items).map(([menuItemId, quantity]) => ({ menuItemId, quantity }));
+  }
+
+  return [];
+}
+
+function getBillGroupItems(groupBill) {
+  const items = groupBill?.combined?.items || groupBill?.items || [];
+
+  if (Array.isArray(items)) {
+    return items;
   }
 
   return [];
@@ -97,6 +108,7 @@ function AwaitingOrder({ onBrowseMenu }) {
 export default function Bill() {
   const navigate = useNavigate();
   const [orders, setOrders] = useState(readLocalHistory);
+  const [groupBill, setGroupBill] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [message, setMessage] = useState("");
 
@@ -122,40 +134,67 @@ export default function Bill() {
     }
   };
 
+  const loadGroupBill = async () => {
+    const storedBillGroupCode = localStorage.getItem("niyaaz-bill-group-code")?.trim();
+
+    if (!storedBillGroupCode) {
+      setGroupBill(null);
+      return;
+    }
+
+    try {
+      const bill = await getCombinedBillApi(storedBillGroupCode);
+      setGroupBill(bill);
+    } catch {
+      setGroupBill(null);
+    }
+  };
+
   useEffect(() => {
     loadOrders();
+    loadGroupBill();
   }, []);
 
   const currentOrder = orders[0] ?? null;
   const firstOrderItems = currentOrder ? getOrderItems(currentOrder) : [];
-  const subtotal = firstOrderItems.reduce(
+  const billGroupItems = getBillGroupItems(groupBill);
+  const displayedItems = billGroupItems.length ? billGroupItems : firstOrderItems;
+  const subtotal = displayedItems.reduce(
     (sum, item) => sum + Number(item.total ?? (Number(item.price || 0) * Number(item.quantity || 1))),
     0,
   );
   const serviceCharge = subtotal * 0.05;
   const taxes = subtotal * 0.18;
-  const grandTotal = subtotal + serviceCharge + taxes;
-  const itemQuantity = firstOrderItems.reduce((sum, item) => sum + Number(item.quantity || 1), 0);
+  const grandTotal = groupBill
+    ? Number(groupBill?.combined?.totalAmount ?? groupBill?.totalAmount ?? subtotal + serviceCharge + taxes)
+    : subtotal + serviceCharge + taxes;
+  const itemQuantity = displayedItems.reduce((sum, item) => sum + Number(item.quantity || 1), 0);
   const orderNumber = currentOrder?.orderNumber || currentOrder?.id || "—";
   const tableName = currentOrder?.tableName || "—";
-  const orderTimestamp = currentOrder?.createdAt ? new Date(currentOrder.createdAt).toLocaleString("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }) : "—";
+  const billGroupCode = groupBill?.group?.code || localStorage.getItem("niyaaz-bill-group-code")?.trim() || "—";
+  const receiptTitle = groupBill ? "Shared Bill" : "Receipt";
+  const receiptMetadataLabel = groupBill ? "Group" : "Table";
+  const receiptMetadataValue = groupBill ? billGroupCode : tableName;
+  const orderTimestamp = (groupBill?.group?.createdAt || currentOrder?.createdAt)
+    ? new Date(groupBill?.group?.createdAt || currentOrder?.createdAt).toLocaleString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    })
+    : "—";
 
   if (isLoading) {
     return <CookingLoader />;
   }
 
-  if (!firstOrderItems.length) {
+  if (!displayedItems.length) {
     return <AwaitingOrder onBrowseMenu={() => navigate("/home")} />;
   }
 
   return (
-    <main className="min-h-screen bg-[#f5efe7] px-4 py-6 text-[#0f2c2a] sm:px-6">
+    <main className="bill-page min-h-screen bg-[#f5efe7] px-4 py-6 text-[#0f2c2a] sm:px-6">
       <div className="mx-auto max-w-[430px]">
         {message && <p className="mb-4 rounded-xl bg-amber-100 px-4 py-3 text-sm font-medium text-amber-900">{message}</p>}
 
@@ -178,7 +217,7 @@ export default function Bill() {
 
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-[0.24em] text-[#f8efe7]/70">NIYAAZ</p>
-                  <p className="text-xl font-black uppercase tracking-tight">Receipt</p>
+                  <p className="text-xl font-black uppercase tracking-tight">{receiptTitle}</p>
                 </div>
               </div>
 
@@ -197,13 +236,13 @@ export default function Bill() {
             <div className="rounded-[22px] border border-[#0f2c2a]/15 bg-white p-4 shadow-[0_8px_18px_rgba(15,44,42,0.06)]">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#0f2c2a]/55">Table</p>
-                  <p className="mt-1 text-2xl font-black tracking-tight">{tableName}</p>
+                  <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#0f2c2a]/55">{receiptMetadataLabel}</p>
+                  <p className="mt-1 text-2xl font-black tracking-tight">{receiptMetadataValue}</p>
                 </div>
 
                 <div className="text-right">
-                  <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#0f2c2a]/55">Order</p>
-                  <p className="mt-1 text-xl font-black">#{orderNumber}</p>
+                  <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#0f2c2a]/55">{groupBill ? "Total" : "Order"}</p>
+                  <p className="mt-1 text-xl font-black">{groupBill ? formatCurrency(grandTotal) : `#${orderNumber}`}</p>
                 </div>
               </div>
 
@@ -221,14 +260,14 @@ export default function Bill() {
               </div>
 
               <div className="space-y-3">
-                {firstOrderItems.map((item, index) => {
+                {displayedItems.map((item, index) => {
                   const qty = Number(item.quantity || 1);
                   const amount = Number(item.total ?? (Number(item.price || 0) * qty));
 
                   return (
-                    <div key={`${item.name}-${index}`} className="flex items-start justify-between gap-3 text-[#0f2c2a]">
+                    <div key={`${item.name || item.menuItemName || item.menuItemId || "item"}-${index}`} className="flex items-start justify-between gap-3 text-[#0f2c2a]">
                       <div className="min-w-0 flex-1">
-                        <p className="text-base font-black leading-tight">{item.name}</p>
+                        <p className="text-base font-black leading-tight">{item.name || item.menuItemName || "Menu item"}</p>
                         <p className="text-xs text-[#0f2c2a]/55">{formatCurrency(Number(item.price || 0))} each</p>
                       </div>
 
