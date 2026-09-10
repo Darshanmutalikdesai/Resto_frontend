@@ -104,6 +104,14 @@ export const CartProvider = ({ children }) => {
       quantity,
     };
 
+    setCart((prev) => {
+      const currentQty = Number(prev[id] || 0);
+      return {
+        ...prev,
+        [id]: currentQty + quantity,
+      };
+    });
+
     try {
       if (billGroupCode) {
         await addBillGroupCartItemApi(billGroupCode, productId, quantity);
@@ -113,20 +121,11 @@ export const CartProvider = ({ children }) => {
 
         if (Object.keys(normalized).length > 0) {
           setCart(normalized);
-          return;
         }
       }
     } catch {
-      // Fallback to optimistic local cart state when the API is unavailable.
+      // Keep the optimistic local cart update; the backend failure is already handled gracefully.
     }
-
-    setCart((prev) => {
-      const currentQty = Number(prev[id] || 0);
-      return {
-        ...prev,
-        [id]: currentQty + quantity,
-      };
-    });
   };
 
   const updateQty = async (productId, quantity) => {

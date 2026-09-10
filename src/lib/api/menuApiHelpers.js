@@ -108,6 +108,7 @@ export function normalizeApiMenuItems(payload) {
   }
 
   return list
+    .filter((item) => item?.isAvailable !== false)
     .map((item, index) => {
       const itemName = item.name || item.itemName || item.menuItemName || item.title || "Menu Item";
       const categoryName =

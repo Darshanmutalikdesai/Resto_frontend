@@ -92,11 +92,11 @@ function AppShell({ theme, setTheme }) {
           <Routes location={location}>
             <Route path="/" element={<NiyaazLandingPage />} />
             <Route path="/home" element={<RequireCustomerDetails><HomePage /></RequireCustomerDetails>} />
-            <Route path="/menu-images" element={<MenuImageManager />} />
-            <Route path="/menu-serial-images" element={<MenuSerialImageManager />} />
+            <Route path="/menu-images" element={<RequireCustomerDetails><MenuImageManager /></RequireCustomerDetails>} />
+            <Route path="/menu-serial-images" element={<RequireCustomerDetails><MenuSerialImageManager /></RequireCustomerDetails>} />
             <Route path="/cart" element={<RequireCustomerDetails><Cart /></RequireCustomerDetails>} />
             <Route path="/bill" element={<RequireCustomerDetails><Bill /></RequireCustomerDetails>} />
-            <Route path="/split-bill" element={<SplitBill />} />
+            <Route path="/split-bill" element={<RequireCustomerDetails><SplitBill /></RequireCustomerDetails>} />
             <Route path="/categories" element={<RequireCustomerDetails><CategoriesPage /></RequireCustomerDetails>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
