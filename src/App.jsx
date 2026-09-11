@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { MoonStar, SunMedium } from "lucide-react";
@@ -10,17 +10,18 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 // Pages / Landing
-import NiyaazLandingPage from "./components/NiyaazLandingPage";
-import HomePage from "./pages/HomePage";
-import MenuImageManager from "./pages/MenuImageManager";
-import MenuSerialImageManager from "./pages/MenuSerialImageManager";
-import Cart from "./components/pages/Cart";
-import Bill from "./components/pages/Bill";
-import SplitBill from "./components/pages/SplitBill";
-import CategoriesPage from "./components/layout/Categoriespage";
 import Footer from "./components/layout/Footer";
 import { BottomNav } from "./components/UI";
 import CookingLoader from "./components/CookingLoader";
+
+const NiyaazLandingPage = lazy(() => import("./components/NiyaazLandingPage"));
+const HomePage = lazy(() => import("./pages/HomePage"));
+const MenuImageManager = lazy(() => import("./pages/MenuImageManager"));
+const MenuSerialImageManager = lazy(() => import("./pages/MenuSerialImageManager"));
+const Cart = lazy(() => import("./components/pages/Cart"));
+const Bill = lazy(() => import("./components/pages/Bill"));
+const SplitBill = lazy(() => import("./components/pages/SplitBill"));
+const CategoriesPage = lazy(() => import("./components/layout/Categoriespage"));
 
 const queryClient = new QueryClient();
 
@@ -80,28 +81,30 @@ function AppShell({ theme, setTheme }) {
       <div className="theme-toggle-wrap">
         <ThemeToggle theme={theme} onToggle={() => setTheme((current) => current === "dark" ? "light" : "dark")} />
       </div>
-      <AnimatePresence mode="wait" initial={false}>
-        <motion.div
-          key={`${location.pathname}${location.search}`}
-          className="niyaaz-route-motion"
-          initial={shouldReduceMotion ? false : { opacity: 0, y: 32, scale: 0.98 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={shouldReduceMotion ? undefined : { opacity: 0, y: 24, scale: 0.985 }}
-          transition={{ duration: shouldReduceMotion ? 0 : 0.45, ease: [0.22, 1, 0.36, 1] }}
-        >
-          <Routes location={location}>
-            <Route path="/" element={<NiyaazLandingPage />} />
-            <Route path="/home" element={<RequireCustomerDetails><HomePage /></RequireCustomerDetails>} />
-            <Route path="/menu-images" element={<RequireCustomerDetails><MenuImageManager /></RequireCustomerDetails>} />
-            <Route path="/menu-serial-images" element={<RequireCustomerDetails><MenuSerialImageManager /></RequireCustomerDetails>} />
-            <Route path="/cart" element={<RequireCustomerDetails><Cart /></RequireCustomerDetails>} />
-            <Route path="/bill" element={<RequireCustomerDetails><Bill /></RequireCustomerDetails>} />
-            <Route path="/split-bill" element={<RequireCustomerDetails><SplitBill /></RequireCustomerDetails>} />
-            <Route path="/categories" element={<RequireCustomerDetails><CategoriesPage /></RequireCustomerDetails>} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </motion.div>
-      </AnimatePresence>
+      <Suspense fallback={<CookingLoader />}>
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={`${location.pathname}${location.search}`}
+            className="niyaaz-route-motion"
+            initial={shouldReduceMotion ? false : { opacity: 0, y: 32, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={shouldReduceMotion ? undefined : { opacity: 0, y: 24, scale: 0.985 }}
+            transition={{ duration: shouldReduceMotion ? 0 : 0.45, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <Routes location={location}>
+              <Route path="/" element={<NiyaazLandingPage />} />
+              <Route path="/home" element={<RequireCustomerDetails><HomePage /></RequireCustomerDetails>} />
+              <Route path="/menu-images" element={<RequireCustomerDetails><MenuImageManager /></RequireCustomerDetails>} />
+              <Route path="/menu-serial-images" element={<RequireCustomerDetails><MenuSerialImageManager /></RequireCustomerDetails>} />
+              <Route path="/cart" element={<RequireCustomerDetails><Cart /></RequireCustomerDetails>} />
+              <Route path="/bill" element={<RequireCustomerDetails><Bill /></RequireCustomerDetails>} />
+              <Route path="/split-bill" element={<RequireCustomerDetails><SplitBill /></RequireCustomerDetails>} />
+              <Route path="/categories" element={<RequireCustomerDetails><CategoriesPage /></RequireCustomerDetails>} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </motion.div>
+        </AnimatePresence>
+      </Suspense>
       {showFooter && <Footer />}
       {showBottomNav && <BottomNav active={active} cartCount={cartCount} onNavigate={navigate} />}
     </div>

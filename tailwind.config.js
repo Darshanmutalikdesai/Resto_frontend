@@ -5,10 +5,6 @@ export default {
   content: ["./index.html", "./src/**/*.{ts,tsx,js,jsx}"],
   theme: {
     extend: {
-      fontFamily: {
-        nasal: ["Nasalization", "sans-serif"], // ✅ custom font
-        orbitron: ["Orbitron", "sans-serif"], 
-      },
       borderRadius: {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
