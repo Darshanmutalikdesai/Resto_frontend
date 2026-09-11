@@ -3,13 +3,20 @@ import { ArrowLeft, ArrowRight, ChefHat, FileText, Flame, RefreshCw, Sparkles } 
 import { useNavigate } from "react-router-dom";
 import CookingLoader from "../CookingLoader";
 import { getCombinedBillApi } from "../../lib/api/billGroupApi";
-import { myOrdersApi } from "../../lib/api/orderApi";
-import { readLocalHistory } from "../../lib/orderHistory";
+import { generateOrderBillApi, myOrdersApi } from "../../lib/api/orderApi";
+import { getApiErrorMessage } from "../../lib/apiClient";
+import {
+  clearGeneratedBill,
+  readGeneratedBill,
+  readLocalHistory,
+  saveGeneratedBill,
+} from "../../lib/orderHistory";
 
 const formatCurrency = (value) => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(Number(value || 0));
+const GST_RATE = 0.18;
 
 function getOrderItems(order) {
-  const items = order?.items || order?.orderItems || order?.data?.items || [];
+  const items = order?.items || order?.orderItems || order?.data?.items || order?.data?.orderItems || [];
 
   if (Array.isArray(items)) {
     return items;
@@ -22,6 +29,40 @@ function getOrderItems(order) {
   return [];
 }
 
+function getItemId(item) {
+  return item?.menuItemId ?? item?.itemId ?? item?.productId ?? item?.menuItem?.id ?? item?.product?.id;
+}
+
+function getItemQuantity(item) {
+  return Number(item?.quantity ?? item?.qty ?? 1);
+}
+
+function getItemPrice(item) {
+  return Number(item?.price ?? item?.unitPrice ?? item?.menuItem?.price ?? item?.product?.price ?? 0);
+}
+
+function getItemAmount(item) {
+  return Number(item?.total ?? item?.lineTotal ?? item?.amount ?? getItemPrice(item) * getItemQuantity(item));
+}
+
+function mergeBillItems(billItems, fallbackItems) {
+  return billItems.map((item, index) => {
+    const itemId = getItemId(item);
+    const fallback = fallbackItems.find((candidate) => String(getItemId(candidate)) === String(itemId)) || fallbackItems[index];
+    const quantity = getItemQuantity(item);
+    const amount = getItemAmount(item) || getItemAmount(fallback);
+
+    return {
+      ...fallback,
+      ...item,
+      name: item?.name || item?.itemName || item?.menuItemName || item?.menuItem?.name || fallback?.name || fallback?.itemName,
+      price: getItemPrice(item) || getItemPrice(fallback),
+      quantity,
+      total: amount,
+    };
+  });
+}
+
 function getBillGroupItems(groupBill) {
   const items = groupBill?.combined?.items || groupBill?.items || [];
 
@@ -30,6 +71,13 @@ function getBillGroupItems(groupBill) {
   }
 
   return [];
+}
+
+function getOrderBill(response) {
+  return response?.bill
+    || response?.data?.bill
+    || response?.data?.data?.bill
+    || (response?.items || response?.totalAmount || response?.orderNumber ? response : null);
 }
 
 // Empty-bill state — same visual language as CookingLoader (brand mark,
@@ -108,8 +156,12 @@ function AwaitingOrder({ onBrowseMenu }) {
 export default function Bill() {
   const navigate = useNavigate();
   const [orders, setOrders] = useState(readLocalHistory);
+  const savedGeneratedBill = readGeneratedBill();
+  const [orderBill, setOrderBill] = useState(savedGeneratedBill?.bill || null);
+  const [generatedBillExpiresAt, setGeneratedBillExpiresAt] = useState(savedGeneratedBill?.expiresAt || null);
   const [groupBill, setGroupBill] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isGeneratingBill, setIsGeneratingBill] = useState(false);
   const [message, setMessage] = useState("");
 
   const loadOrders = async () => {
@@ -117,6 +169,10 @@ export default function Bill() {
     const localOrders = readLocalHistory();
     try {
       const response = await myOrdersApi();
+      const bill = getOrderBill(response);
+      if (bill && !readGeneratedBill()) {
+        setOrderBill(bill);
+      }
       const remoteOrders = response?.orders || response?.data?.orders || response?.data || response;
       if (Array.isArray(remoteOrders)) {
         const localIds = new Set(localOrders.map((order) => order.id || order.orderId || order.orderNumber).filter(Boolean));
@@ -128,6 +184,9 @@ export default function Bill() {
       setMessage("");
     } catch {
       setMessage("Showing orders confirmed on this device.");
+      if (!readGeneratedBill()) {
+        setOrderBill(null);
+      }
       setOrders(localOrders);
     } finally {
       setIsLoading(false);
@@ -150,28 +209,92 @@ export default function Bill() {
     }
   };
 
+  const handleGenerateBill = async () => {
+    const currentOrderId = currentOrder ? currentOrder.id ?? currentOrder.orderId ?? currentOrder.orderNumber : null;
+
+    if (!currentOrderId) {
+      setMessage("No order is available to generate a bill for.");
+      return;
+    }
+
+    setIsGeneratingBill(true);
+    setMessage("");
+
+    try {
+      const result = await generateOrderBillApi(currentOrderId);
+      const billData = result?.bill ?? result?.data?.bill ?? result?.data ?? result;
+      const generatedBill = typeof billData === "object" && billData ? billData : currentOrder;
+      const expiresAt = saveGeneratedBill(generatedBill);
+      setOrderBill(generatedBill);
+      setGeneratedBillExpiresAt(expiresAt);
+
+      setOrders((previousOrders) =>
+        previousOrders.map((order) => {
+          const orderId = order.id ?? order.orderId ?? order.orderNumber;
+
+          if (String(orderId) !== String(currentOrderId)) {
+            return order;
+          }
+
+          return {
+            ...order,
+            ...(typeof billData === "object" && billData ? billData : {}),
+          };
+        }),
+      );
+
+      setMessage(result?.message || "Bill generated successfully.");
+    } catch (error) {
+      setMessage(getApiErrorMessage(error, "Failed to generate bill."));
+    } finally {
+      setIsGeneratingBill(false);
+    }
+  };
+
   useEffect(() => {
     loadOrders();
     loadGroupBill();
   }, []);
 
+  useEffect(() => {
+    if (!generatedBillExpiresAt) {
+      return undefined;
+    }
+
+    const remaining = Math.max(0, generatedBillExpiresAt - Date.now());
+    const timeoutId = window.setTimeout(() => {
+      clearGeneratedBill();
+      setOrderBill(null);
+      setGeneratedBillExpiresAt(null);
+      setOrders([]);
+      setGroupBill(null);
+    }, remaining);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [generatedBillExpiresAt]);
+
   const currentOrder = orders[0] ?? null;
   const firstOrderItems = currentOrder ? getOrderItems(currentOrder) : [];
+  const orderBillItems = mergeBillItems(getOrderItems(orderBill), firstOrderItems);
   const billGroupItems = getBillGroupItems(groupBill);
-  const displayedItems = billGroupItems.length ? billGroupItems : firstOrderItems;
+  const displayedItems = billGroupItems.length ? billGroupItems : orderBillItems.length ? orderBillItems : firstOrderItems;
   const subtotal = displayedItems.reduce(
     (sum, item) => sum + Number(item.total ?? (Number(item.price || 0) * Number(item.quantity || 1))),
     0,
   );
-  const serviceCharge = subtotal * 0.05;
-  const taxes = subtotal * 0.18;
-  const grandTotal = groupBill
-    ? Number(groupBill?.combined?.totalAmount ?? groupBill?.totalAmount ?? subtotal + serviceCharge + taxes)
-    : subtotal + serviceCharge + taxes;
+  const taxableAmount = subtotal / (1 + GST_RATE);
+  const gstAmount = subtotal - taxableAmount;
+  const cgstAmount = gstAmount / 2;
+  const sgstAmount = gstAmount - cgstAmount;
+  const billTotal = Number(orderBill?.totalAmount || 0);
+  const grandTotal = groupBill ? subtotal : billTotal || subtotal;
   const itemQuantity = displayedItems.reduce((sum, item) => sum + Number(item.quantity || 1), 0);
-  const orderNumber = currentOrder?.orderNumber || currentOrder?.id || "—";
-  const tableName = currentOrder?.tableName || "—";
+  const orderNumber = orderBill?.orderNumber || currentOrder?.orderNumber || currentOrder?.id || "—";
+  const tableName = currentOrder?.tableNumber || currentOrder?.tableName || "—";
+  const customerName = currentOrder?.customerName || "—";
+  const currentOrderId = currentOrder ? currentOrder.id ?? currentOrder.orderId ?? currentOrder.orderNumber : null;
   const billGroupCode = groupBill?.group?.code || localStorage.getItem("niyaaz-bill-group-code")?.trim() || "—";
+  const isBillGenerated = Boolean(generatedBillExpiresAt);
   const receiptTitle = groupBill ? "Shared Bill" : "Receipt";
   const receiptMetadataLabel = groupBill ? "Group" : "Table";
   const receiptMetadataValue = groupBill ? billGroupCode : tableName;
@@ -238,6 +361,7 @@ export default function Bill() {
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#0f2c2a]/55">{receiptMetadataLabel}</p>
                   <p className="mt-1 text-2xl font-black tracking-tight">{receiptMetadataValue}</p>
+                  <p className="mt-1 text-xs font-semibold text-[#0f2c2a]/65">Customer: {customerName}</p>
                 </div>
 
                 <div className="text-right">
@@ -279,19 +403,23 @@ export default function Bill() {
               </div>
             </div>
 
-            <div className="mt-4 rounded-[22px] border border-[#0f2c2a]/15 bg-[#f2f7f4] p-4 shadow-[inset_0_0_0_1px_rgba(15,44,42,0.02)]">
+            <div className="bill-summary mt-4 rounded-[22px] border border-[#0f2c2a]/15 bg-[#f2f7f4] p-4 shadow-[inset_0_0_0_1px_rgba(15,44,42,0.02)]">
               <div className="space-y-2 text-sm text-[#0f2c2a]">
                 <div className="flex items-center justify-between">
-                  <span className="text-[#0f2c2a]/70">Subtotal</span>
+                  <span className="text-[#0f2c2a]/70">Taxable value</span>
+                  <span className="font-semibold">{formatCurrency(taxableAmount)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[#0f2c2a]/70">CGST (9%)</span>
+                  <span className="font-semibold">{formatCurrency(cgstAmount)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[#0f2c2a]/70">SGST (9%)</span>
+                  <span className="font-semibold">{formatCurrency(sgstAmount)}</span>
+                </div>
+                <div className="flex items-center justify-between border-t border-dashed border-[#0f2c2a]/20 pt-2">
+                  <span className="font-semibold text-[#0f2c2a]/70">Item total (GST included)</span>
                   <span className="font-semibold">{formatCurrency(subtotal)}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-[#0f2c2a]/70">Service</span>
-                  <span className="font-semibold">{formatCurrency(serviceCharge)}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-[#0f2c2a]/70">Taxes</span>
-                  <span className="font-semibold">{formatCurrency(taxes)}</span>
                 </div>
               </div>
 
@@ -306,34 +434,24 @@ export default function Bill() {
                     {itemQuantity} items
                   </div>
                 </div>
+
+                {isBillGenerated ? (
+                  <div className="mt-4 w-full rounded-2xl bg-[#dcefe5] px-4 py-3 text-center text-sm font-black uppercase tracking-[0.14em] text-[#0f2c2a]">
+                    Bill generated
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleGenerateBill}
+                    disabled={isGeneratingBill || !currentOrderId || groupBill}
+                    className="mt-4 w-full rounded-2xl bg-[#0f2c2a] px-4 py-3 text-sm font-black uppercase tracking-[0.14em] text-[#f8efe7] transition hover:bg-[#123734] disabled:cursor-not-allowed disabled:bg-[#0f2c2a]/50"
+                  >
+                    {isGeneratingBill ? "Generating..." : "Generate Bill"}
+                  </button>
+                )}
               </div>
             </div>
 
-            <div className="mt-5">
-              <div className="mb-3 flex items-center justify-between text-[10px] font-black uppercase tracking-[0.18em] text-[#0f2c2a]/60">
-                <span>Payment</span>
-                <span>Card / Cash</span>
-              </div>
-
-              <div className="space-y-3">
-                <button
-                  type="button"
-                  onClick={() => navigate("/split-bill")}
-                  className="flex w-full items-center justify-center gap-3 rounded-[22px] border-[3px] border-[#0f2c2a] bg-[#f3d8c6] px-5 py-4 text-lg font-black uppercase tracking-tight text-[#0f2c2a] shadow-[0_8px_0_#0f2c2a]"
-                >
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#fffaf4] text-base">⎇</span>
-                  <span>Split Bill</span>
-                </button>
-
-                <button
-                  type="button"
-                  className="flex w-full items-center justify-center gap-3 rounded-[22px] border-[3px] border-[#0f2c2a] bg-[#0f2c2a] px-5 py-4 text-lg font-black uppercase tracking-tight text-[#f8efe7] shadow-[0_8px_0_#0f2c2a]"
-                >
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#f8efe7] text-[#0f2c2a] text-base">✓</span>
-                  <span>Pay Now</span>
-                </button>
-              </div>
-            </div>
           </div>
         </div>
       </div>

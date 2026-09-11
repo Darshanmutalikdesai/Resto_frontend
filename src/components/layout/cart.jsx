@@ -136,13 +136,18 @@ export default function CartPage() {
           total: price * qty,
         };
       });
+      const orderBill = order?.bill
+        || order?.data?.bill
+        || order?.data?.data?.bill
+        || (order?.items || order?.totalAmount || order?.orderNumber ? order : null);
 
       const history = readLocalHistory();
       saveLocalHistory([
         {
           ...order,
-          items: orderItems,
-          total,
+          ...(orderBill || {}),
+          items: orderBill?.items || orderItems,
+          total: orderBill?.totalAmount ?? total,
           customerName: normalizedCustomerName,
           customerPhone: normalizedCustomerPhone,
           tableNumber: normalizedTableNumber,
@@ -198,13 +203,13 @@ export default function CartPage() {
           </div>
         ) : (
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start">
-            <section className="rounded-[28px] border border-[#06483e]/8 bg-white p-4 shadow-[0_8px_24px_rgba(6,72,62,0.05)] sm:p-6">
+            <section className="cart-items-panel rounded-[28px] border border-[#06483e]/8 bg-white p-4 shadow-[0_8px_24px_rgba(6,72,62,0.05)] sm:p-6">
               <div className="mb-6 flex items-end justify-between gap-4 border-b border-[#06483e]/10 pb-5">
                 <div>
                   <h1 className="text-2xl font-black tracking-tight sm:text-3xl">Your cart</h1>
                   <p className="mt-1 text-xs text-[#06483e]/55 sm:text-sm">Review your order before checkout.</p>
                 </div>
-                <span className="shrink-0 rounded-full bg-[#f4efe6] px-3 py-1.5 text-xs font-bold text-[#06483e]">
+                <span className="cart-count-badge shrink-0 rounded-full bg-[#f4efe6] px-3 py-1.5 text-xs font-bold text-[#06483e]">
                   {itemCount} {itemCount === 1 ? "item" : "items"}
                 </span>
               </div>
@@ -221,7 +226,7 @@ export default function CartPage() {
                   return (
                     <div
                       key={id}
-                      className="grid gap-3 rounded-2xl bg-[#faf8f4] p-3 sm:grid-cols-[minmax(0,1fr)_90px_160px_90px] sm:items-center sm:rounded-none sm:bg-transparent sm:p-0 sm:py-5"
+                      className="cart-item-row grid gap-3 rounded-2xl bg-[#faf8f4] p-3 sm:grid-cols-[minmax(0,1fr)_90px_160px_90px] sm:items-center sm:rounded-none sm:bg-transparent sm:p-0 sm:py-5"
                     >
                       <div className="flex min-w-0 items-center gap-3.5">
                         <div className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl ${badgeColor} text-base font-black text-white shadow-sm sm:h-20 sm:w-20`}>

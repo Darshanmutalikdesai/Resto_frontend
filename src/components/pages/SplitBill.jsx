@@ -1,15 +1,30 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowLeft, Split, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { createBillGroupApi, getCombinedBillApi, joinBillGroupApi } from "../../lib/api/billGroupApi";
 
 export default function SplitBill() {
   const navigate = useNavigate();
-  const [code, setCode] = useState("");
+  const [code, setCode] = useState(() => localStorage.getItem("niyaaz-bill-group-code")?.trim() || "");
   const [message, setMessage] = useState("");
   const [combinedBill, setCombinedBill] = useState(null);
   const [hasJoinedGroup, setHasJoinedGroup] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const storedCode = localStorage.getItem("niyaaz-bill-group-code")?.trim();
+
+    if (!storedCode) {
+      return;
+    }
+
+    setHasJoinedGroup(true);
+    setIsLoading(true);
+    getCombinedBillApi(storedCode)
+      .then(setCombinedBill)
+      .catch(() => setMessage("Unable to reload the shared bill."))
+      .finally(() => setIsLoading(false));
+  }, []);
 
   const customerName = (() => {
     try {
